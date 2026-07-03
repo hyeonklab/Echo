@@ -1,0 +1,57 @@
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# IDE
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# .NET
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+*.nupkg
+*.snupkg
+
+# Node.js
+node_modules/
+dist/
+build/
+.npm
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Logs / temp
+*.log
+*.tmp
+*.cache
+
+# Database (local dev)
+*.mdf
+*.ldf
+*.db
+*.sqlite

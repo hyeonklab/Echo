@@ -6,6 +6,7 @@ package com.echo.domain;
 public enum RoomType {
 
 	GROUP,
-	DM
+	DM,
+	SELF
 
 }

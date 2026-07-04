@@ -1,6 +1,6 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
-export type RoomType = "GROUP" | "DM";
+export type RoomType = "GROUP" | "DM" | "SELF";
 
 export type RoomMember = {
   userId: number;
@@ -17,6 +17,21 @@ export type Room = {
   createdAt: string;
   members: RoomMember[];
 };
+
+/**
+ * 채팅방 유형 라벨을 반환한다.
+ */
+export function getRoomTypeLabel(type: RoomType): string {
+  if (type === "SELF") {
+    return "나와의 대화";
+  }
+
+  if (type === "DM") {
+    return "1:1 DM";
+  }
+
+  return "그룹";
+}
 
 /**
  * 인증 헤더를 구성한다.

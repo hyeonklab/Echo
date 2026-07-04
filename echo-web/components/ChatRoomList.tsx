@@ -11,7 +11,7 @@ import {
   createGroupRoom,
   deleteRoom,
   fetchRooms,
-  inviteRoomMember,
+  getRoomTypeLabel,
 } from "@/lib/rooms";
 
 /**
@@ -22,12 +22,8 @@ function resolveDmErrorMessage(errorMessage: string | null): string {
     return "DM 채팅방 생성에 실패했습니다.";
   }
 
-  if (errorMessage.includes("yourself")) {
-    return "자신과는 DM을 시작할 수 없습니다.";
-  }
-
   if (errorMessage.includes("User not found")) {
-    return "존재하지 않는 사용자 ID입니다.";
+    return "사용자를 찾을 수 없습니다.";
   }
 
   return errorMessage;
@@ -42,9 +38,6 @@ export default function ChatRoomList() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [groupName, setGroupName] = useState("");
-  const [dmUserId, setDmUserId] = useState("");
-  const [inviteRoomId, setInviteRoomId] = useState("");
-  const [inviteUserId, setInviteUserId] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pendingDeleteRoom, setPendingDeleteRoom] = useState<Room | null>(null);
@@ -99,26 +92,17 @@ export default function ChatRoomList() {
     setSubmitting(false);
   }
 
-  async function handleCreateDm(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function handleCreateSelfChat() {
     const token = getAccessToken();
-    const targetUserId = Number(dmUserId);
 
-    if (!token || !Number.isInteger(targetUserId) || targetUserId <= 0) {
-      setErrorMessage("유효한 상대 사용자 ID를 입력하세요.");
-      return;
-    }
-
-    if (currentUser?.id === targetUserId) {
-      setErrorMessage("자신과는 DM을 시작할 수 없습니다.");
+    if (!token || !currentUser) {
       return;
     }
 
     setSubmitting(true);
     setErrorMessage(null);
 
-    const { room, errorMessage } = await createDmRoom(token, targetUserId);
+    const { room, errorMessage } = await createDmRoom(token, currentUser.id);
 
     if (!room) {
       setErrorMessage(resolveDmErrorMessage(errorMessage));
@@ -126,37 +110,7 @@ export default function ChatRoomList() {
       return;
     }
 
-    setDmUserId("");
     setRooms((prev) => [room, ...prev.filter((item) => item.id !== room.id)]);
-    setSubmitting(false);
-  }
-
-  async function handleInviteMember(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const token = getAccessToken();
-    const roomId = Number(inviteRoomId);
-    const userId = Number(inviteUserId);
-
-    if (!token || !Number.isInteger(roomId) || !Number.isInteger(userId)) {
-      setErrorMessage("채팅방 ID와 사용자 ID를 확인하세요.");
-      return;
-    }
-
-    setSubmitting(true);
-    setErrorMessage(null);
-
-    const room = await inviteRoomMember(token, roomId, userId);
-
-    if (!room) {
-      setErrorMessage("멤버 초대에 실패했습니다.");
-      setSubmitting(false);
-      return;
-    }
-
-    setInviteRoomId("");
-    setInviteUserId("");
-    setRooms((prev) => prev.map((item) => (item.id === room.id ? room : item)));
     setSubmitting(false);
   }
 
@@ -275,56 +229,15 @@ export default function ChatRoomList() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">1:1 DM 시작</h2>
-        <form className="flex flex-col gap-3 sm:flex-row" onSubmit={handleCreateDm}>
-          <input
-            type="number"
-            min={1}
-            value={dmUserId}
-            onChange={(event) => setDmUserId(event.target.value)}
-            placeholder="상대 사용자 ID"
-            className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
-            disabled={submitting}
-          />
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-          >
-            DM 시작
-          </button>
-        </form>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">멤버 초대 (그룹)</h2>
-        <form className="grid gap-3 sm:grid-cols-3" onSubmit={handleInviteMember}>
-          <input
-            type="number"
-            min={1}
-            value={inviteRoomId}
-            onChange={(event) => setInviteRoomId(event.target.value)}
-            placeholder="채팅방 ID"
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
-            disabled={submitting}
-          />
-          <input
-            type="number"
-            min={1}
-            value={inviteUserId}
-            onChange={(event) => setInviteUserId(event.target.value)}
-            placeholder="초대할 사용자 ID"
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
-            disabled={submitting}
-          />
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium dark:border-zinc-600"
-          >
-            초대
-          </button>
-        </form>
+        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">나와의 대화</h2>
+        <button
+          type="button"
+          onClick={handleCreateSelfChat}
+          disabled={submitting || !currentUser}
+          className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          나와의 대화 시작
+        </button>
       </section>
 
       <section className="space-y-3">
@@ -347,9 +260,7 @@ export default function ChatRoomList() {
                     >
                       {room.name}
                     </Link>
-                    <p className="mt-1 text-xs text-zinc-500">
-                      {room.type === "DM" ? "1:1 DM" : "그룹"} · ID {room.id}
-                    </p>
+                    <p className="mt-1 text-xs text-zinc-500">{getRoomTypeLabel(room.type)}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-zinc-500">{room.members.length}명</span>

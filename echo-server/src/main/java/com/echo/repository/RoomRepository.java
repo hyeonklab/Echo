@@ -37,4 +37,17 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 		@Param("roomType") RoomType roomType
 	);
 
+	@Query("""
+		SELECT rm.room
+		FROM RoomMember rm
+		WHERE rm.room.type = :roomType
+		AND rm.user.id = :userId
+		GROUP BY rm.room
+		HAVING COUNT(rm) = 1
+		""")
+	List<Room> findSelfRoomByUserId(
+		@Param("userId") Long userId,
+		@Param("roomType") RoomType roomType
+	);
+
 }

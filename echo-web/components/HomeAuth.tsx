@@ -77,10 +77,6 @@ export default function HomeAuth() {
       </p>
       <dl className="space-y-2 text-sm">
         <div className="flex justify-between gap-4">
-          <dt className="text-zinc-500">사용자 ID</dt>
-          <dd className="font-medium text-zinc-900 dark:text-zinc-100">{user.id}</dd>
-        </div>
-        <div className="flex justify-between gap-4">
           <dt className="text-zinc-500">이름</dt>
           <dd className="font-medium text-zinc-900 dark:text-zinc-100">{user.displayName}</dd>
         </div>

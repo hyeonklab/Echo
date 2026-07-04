@@ -86,7 +86,7 @@ public class RoomService {
 	@Transactional
 	public RoomResponse createOrGetDmRoom(Long userId, CreateDmRoomRequest request) {
 		if (userId.equals(request.targetUserId())) {
-			throw new IllegalArgumentException("Cannot create DM room with yourself");
+			return createOrGetSelfRoom(userId);
 		}
 
 		User currentUser = userService.getUser(userId);
@@ -112,13 +112,37 @@ public class RoomService {
 	}
 
 	/**
+	 * 나와의 대화 채팅방을 조회하거나 생성한다.
+	 */
+	@Transactional
+	public RoomResponse createOrGetSelfRoom(Long userId) {
+		User user = userService.getUser(userId);
+		List<Room> existingRooms = roomRepository.findSelfRoomByUserId(userId, RoomType.SELF);
+
+		if (!existingRooms.isEmpty()) {
+			return toRoomResponse(existingRooms.get(0));
+		}
+
+		Room newRoom = Room.builder()
+			.name("나와의 대화")
+			.type(RoomType.SELF)
+			.createdBy(user)
+			.build();
+		Room room = roomRepository.save(Objects.requireNonNull(newRoom));
+
+		addMember(room, user);
+
+		return toRoomResponse(room);
+	}
+
+	/**
 	 * 채팅방에 멤버를 초대한다.
 	 */
 	@Transactional
 	public RoomResponse inviteMember(Long roomId, Long requesterUserId, InviteRoomMemberRequest request) {
 		Room room = getRoomForMember(roomId, requesterUserId);
 
-		if (room.getType() == RoomType.DM) {
+		if (room.getType() != RoomType.GROUP) {
 			throw new IllegalArgumentException("Cannot invite members to a DM room");
 		}
 
@@ -146,7 +170,7 @@ public class RoomService {
 
 		roomMemberRepository.deleteByRoom_IdAndUser_Id(roomId, userId);
 
-		if (room.getType() == RoomType.DM || roomMemberRepository.countByRoom_Id(roomId) == 0) {
+		if (room.getType() != RoomType.GROUP || roomMemberRepository.countByRoom_Id(roomId) == 0) {
 			roomRepository.delete(room);
 		}
 	}

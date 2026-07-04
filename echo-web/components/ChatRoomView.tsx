@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { AuthUser, clearTokens, fetchCurrentUser, getAccessToken } from "@/lib/auth";
 import { Message, fetchMessages, sendMessage } from "@/lib/messages";
-import { Room, fetchRoom } from "@/lib/rooms";
+import { Room, fetchRoom, getRoomTypeLabel } from "@/lib/rooms";
 
 type ChatRoomViewProps = {
   roomId: number;
@@ -168,7 +168,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
           </Link>
           <h2 className="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-50">{room.name}</h2>
           <p className="mt-1 text-xs text-zinc-500">
-            {room.type === "DM" ? "1:1 DM" : "그룹"} · {room.members.length}명
+            {getRoomTypeLabel(room.type)} · {room.members.length}명
           </p>
         </div>
       </div>

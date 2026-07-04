@@ -72,3 +72,6 @@ venv/
 .understand-anything/.trash-*/
 .understand-anything/fingerprints.json
 .understand-anything/diff-overlay.json
+
+# Agent local context (not shared)
+echo-web/CLAUDE.md

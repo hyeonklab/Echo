@@ -102,6 +102,7 @@ export default function ChatRoomList() {
 
     setRooms((prev) => [room, ...prev.filter((item) => item.id !== room.id)]);
     setSubmitting(false);
+    router.push(`/chat/${room.id}`);
   }
 
   async function confirmDeleteRoom() {

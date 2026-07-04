@@ -1,3 +1,5 @@
+import { ensureAccessToken } from "@/lib/auth";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 export type Message = {
@@ -25,13 +27,25 @@ function authHeaders(token: string): HeadersInit {
 }
 
 /**
+ * API 호출용 access token을 확보한다.
+ */
+async function resolveAccessToken(): Promise<string | null> {
+  return ensureAccessToken();
+}
+
+/**
  * 채팅방 메시지 히스토리를 조회한다.
  */
 export async function fetchMessages(
-  token: string,
   roomId: number,
   options?: { before?: number; limit?: number },
 ): Promise<MessageHistory | null> {
+  const token = await resolveAccessToken();
+
+  if (!token) {
+    return null;
+  }
+
   const params = new URLSearchParams();
 
   if (options?.before != null) {
@@ -61,11 +75,13 @@ export async function fetchMessages(
 /**
  * 채팅방에 메시지를 전송한다.
  */
-export async function sendMessage(
-  token: string,
-  roomId: number,
-  content: string,
-): Promise<Message | null> {
+export async function sendMessage(roomId: number, content: string): Promise<Message | null> {
+  const token = await resolveAccessToken();
+
+  if (!token) {
+    return null;
+  }
+
   const response = await fetch(`${API_URL}/api/rooms/${roomId}/messages`, {
     method: "POST",
     headers: authHeaders(token),

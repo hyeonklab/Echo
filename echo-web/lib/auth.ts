@@ -10,6 +10,13 @@ export type AuthUser = {
   provider: "LOCAL" | "GOOGLE" | "NAVER";
 };
 
+export type TokenResponse = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+let pendingRefresh: Promise<string | null> | null = null;
+
 /**
  * localStorage에서 access token을 읽는다.
  */
@@ -19,6 +26,17 @@ export function getAccessToken(): string | null {
   }
 
   return localStorage.getItem(ACCESS_TOKEN_KEY);
+}
+
+/**
+ * localStorage에서 refresh token을 읽는다.
+ */
+export function getRefreshToken(): string | null {
+  if (globalThis.window === undefined) {
+    return null;
+  }
+
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
 /**
@@ -74,6 +92,82 @@ export async function exchangeAuthCode(code: string): Promise<{ accessToken: str
   }
 
   return response.json() as Promise<{ accessToken: string; refreshToken: string }>;
+}
+
+/**
+ * refresh token으로 access/refresh token을 재발급한다.
+ */
+export async function refreshAccessTokens(refreshToken: string): Promise<TokenResponse | null> {
+  const response = await fetch(`${API_URL}/api/auth/refresh`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ refreshToken }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return response.json() as Promise<TokenResponse>;
+}
+
+/**
+ * 유효한 access token을 반환한다. 만료 시 refresh token으로 갱신한다.
+ */
+export async function ensureAccessToken(): Promise<string | null> {
+  const accessToken = getAccessToken();
+
+  if (accessToken) {
+    const user = await fetchCurrentUser(accessToken);
+
+    if (user) {
+      return accessToken;
+    }
+  }
+
+  const refreshToken = getRefreshToken();
+
+  if (!refreshToken) {
+    clearTokens();
+    return null;
+  }
+
+  if (!pendingRefresh) {
+    pendingRefresh = refreshAndStore(refreshToken).finally(() => {
+      pendingRefresh = null;
+    });
+  }
+
+  return pendingRefresh;
+}
+
+/**
+ * 세션 사용자 정보를 조회한다. access token 만료 시 자동 갱신한다.
+ */
+export async function fetchSessionUser(): Promise<AuthUser | null> {
+  const accessToken = await ensureAccessToken();
+
+  if (!accessToken) {
+    return null;
+  }
+
+  return fetchCurrentUser(accessToken);
+}
+
+async function refreshAndStore(refreshToken: string): Promise<string | null> {
+  const tokens = await refreshAccessTokens(refreshToken);
+
+  if (!tokens) {
+    clearTokens();
+    return null;
+  }
+
+  setTokens(tokens.accessToken, tokens.refreshToken);
+
+  return tokens.accessToken;
 }
 
 /**

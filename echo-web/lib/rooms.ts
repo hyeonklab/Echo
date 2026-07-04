@@ -1,3 +1,5 @@
+import { ensureAccessToken } from "@/lib/auth";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 export type RoomType = "GROUP" | "DM" | "SELF";
@@ -44,9 +46,22 @@ function authHeaders(token: string): HeadersInit {
 }
 
 /**
+ * API 호출용 access token을 확보한다.
+ */
+async function resolveAccessToken(): Promise<string | null> {
+  return ensureAccessToken();
+}
+
+/**
  * 내 채팅방 목록을 조회한다.
  */
-export async function fetchRooms(token: string): Promise<Room[]> {
+export async function fetchRooms(): Promise<Room[]> {
+  const token = await resolveAccessToken();
+
+  if (!token) {
+    return [];
+  }
+
   const response = await fetch(`${API_URL}/api/rooms`, {
     headers: authHeaders(token),
     cache: "no-store",
@@ -62,7 +77,13 @@ export async function fetchRooms(token: string): Promise<Room[]> {
 /**
  * 채팅방 상세 정보를 조회한다.
  */
-export async function fetchRoom(token: string, roomId: number): Promise<Room | null> {
+export async function fetchRoom(roomId: number): Promise<Room | null> {
+  const token = await resolveAccessToken();
+
+  if (!token) {
+    return null;
+  }
+
   const response = await fetch(`${API_URL}/api/rooms/${roomId}`, {
     headers: authHeaders(token),
     cache: "no-store",
@@ -79,10 +100,15 @@ export async function fetchRoom(token: string, roomId: number): Promise<Room | n
  * 그룹 채팅방을 생성한다.
  */
 export async function createGroupRoom(
-  token: string,
   name: string,
   memberUserIds: number[] = [],
 ): Promise<Room | null> {
+  const token = await resolveAccessToken();
+
+  if (!token) {
+    return null;
+  }
+
   const response = await fetch(`${API_URL}/api/rooms`, {
     method: "POST",
     headers: authHeaders(token),
@@ -118,9 +144,14 @@ async function readApiErrorMessage(response: Response): Promise<string | null> {
  * 1:1 DM 채팅방을 조회하거나 생성한다.
  */
 export async function createDmRoom(
-  token: string,
   targetUserId: number,
 ): Promise<{ room: Room | null; errorMessage: string | null }> {
+  const token = await resolveAccessToken();
+
+  if (!token) {
+    return { room: null, errorMessage: "Authentication required" };
+  }
+
   const response = await fetch(`${API_URL}/api/rooms/dm`, {
     method: "POST",
     headers: authHeaders(token),
@@ -141,11 +172,13 @@ export async function createDmRoom(
 /**
  * 채팅방에 멤버를 초대한다.
  */
-export async function inviteRoomMember(
-  token: string,
-  roomId: number,
-  userId: number,
-): Promise<Room | null> {
+export async function inviteRoomMember(roomId: number, userId: number): Promise<Room | null> {
+  const token = await resolveAccessToken();
+
+  if (!token) {
+    return null;
+  }
+
   const response = await fetch(`${API_URL}/api/rooms/${roomId}/members`, {
     method: "POST",
     headers: authHeaders(token),
@@ -163,7 +196,13 @@ export async function inviteRoomMember(
 /**
  * 채팅방을 삭제하거나 참여를 종료한다.
  */
-export async function deleteRoom(token: string, roomId: number): Promise<boolean> {
+export async function deleteRoom(roomId: number): Promise<boolean> {
+  const token = await resolveAccessToken();
+
+  if (!token) {
+    return false;
+  }
+
   const response = await fetch(`${API_URL}/api/rooms/${roomId}`, {
     method: "DELETE",
     headers: authHeaders(token),

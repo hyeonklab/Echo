@@ -4,7 +4,7 @@ import Link from "next/link";
 import { type SubmitEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { AuthUser, clearTokens, fetchCurrentUser, getAccessToken } from "@/lib/auth";
+import { AuthUser, fetchSessionUser } from "@/lib/auth";
 import { Message, fetchMessages, sendMessage } from "@/lib/messages";
 import { Room, fetchRoom, getRoomTypeLabel } from "@/lib/rooms";
 
@@ -42,24 +42,17 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
 
   useEffect(() => {
     async function loadChatRoom() {
-      const token = getAccessToken();
-
-      if (!token) {
-        router.replace("/login");
-        return;
-      }
-
-      const [roomData, user, history] = await Promise.all([
-        fetchRoom(token, roomId),
-        fetchCurrentUser(token),
-        fetchMessages(token, roomId),
-      ]);
+      const user = await fetchSessionUser();
 
       if (!user) {
-        clearTokens();
         router.replace("/login");
         return;
       }
+
+      const [roomData, history] = await Promise.all([
+        fetchRoom(roomId),
+        fetchMessages(roomId),
+      ]);
 
       if (!roomData || !history) {
         setErrorMessage("채팅방을 불러오지 못했습니다.");
@@ -86,16 +79,14 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   }, [messages]);
 
   async function handleLoadMore() {
-    const token = getAccessToken();
-
-    if (!token || loadingMore || !hasMore || messages.length === 0) {
+    if (loadingMore || !hasMore || messages.length === 0) {
       return;
     }
 
     setLoadingMore(true);
     setErrorMessage(null);
 
-    const history = await fetchMessages(token, roomId, { before: messages[0].id });
+    const history = await fetchMessages(roomId, { before: messages[0].id });
 
     if (!history) {
       setErrorMessage("이전 메시지를 불러오지 못했습니다.");
@@ -111,10 +102,9 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   function handleSendMessage(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const token = getAccessToken();
     const trimmed = messageInput.trim();
 
-    if (!token || !trimmed) {
+    if (!trimmed) {
       return;
     }
 
@@ -124,7 +114,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     setMessageInput("");
     focusMessageInput();
 
-    void sendMessage(token, roomId, contentToSend).then((message) => {
+    void sendMessage(roomId, contentToSend).then((message) => {
       if (!message) {
         setErrorMessage("메시지 전송에 실패했습니다.");
         focusMessageInput();

@@ -5,9 +5,7 @@ import { useEffect, useState } from "react";
 
 import {
   AuthUser,
-  clearTokens,
-  fetchCurrentUser,
-  getAccessToken,
+  fetchSessionUser,
   logout,
 } from "@/lib/auth";
 
@@ -20,17 +18,9 @@ export default function HomeAuth() {
 
   useEffect(() => {
     async function loadUser() {
-      const token = getAccessToken();
-
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      const currentUser = await fetchCurrentUser(token);
+      const currentUser = await fetchSessionUser();
 
       if (!currentUser) {
-        clearTokens();
         setUser(null);
         setLoading(false);
         return;

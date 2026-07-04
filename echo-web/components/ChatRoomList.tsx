@@ -4,7 +4,7 @@ import Link from "next/link";
 import { type SubmitEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { AuthUser, clearTokens, fetchCurrentUser, getAccessToken } from "@/lib/auth";
+import { AuthUser, fetchSessionUser } from "@/lib/auth";
 import {
   Room,
   createDmRoom,
@@ -44,20 +44,14 @@ export default function ChatRoomList() {
 
   useEffect(() => {
     async function loadRooms() {
-      const token = getAccessToken();
-
-      if (!token) {
-        router.replace("/login");
-        return;
-      }
-
-      const [roomList, user] = await Promise.all([fetchRooms(token), fetchCurrentUser(token)]);
+      const user = await fetchSessionUser();
 
       if (!user) {
-        clearTokens();
         router.replace("/login");
         return;
       }
+
+      const roomList = await fetchRooms();
 
       setCurrentUser(user);
       setRooms(roomList);
@@ -70,16 +64,14 @@ export default function ChatRoomList() {
   async function handleCreateGroup(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const token = getAccessToken();
-
-    if (!token || !groupName.trim()) {
+    if (!groupName.trim()) {
       return;
     }
 
     setSubmitting(true);
     setErrorMessage(null);
 
-    const room = await createGroupRoom(token, groupName.trim());
+    const room = await createGroupRoom(groupName.trim());
 
     if (!room) {
       setErrorMessage("그룹 채팅방 생성에 실패했습니다.");
@@ -93,16 +85,14 @@ export default function ChatRoomList() {
   }
 
   async function handleCreateSelfChat() {
-    const token = getAccessToken();
-
-    if (!token || !currentUser) {
+    if (!currentUser) {
       return;
     }
 
     setSubmitting(true);
     setErrorMessage(null);
 
-    const { room, errorMessage } = await createDmRoom(token, currentUser.id);
+    const { room, errorMessage } = await createDmRoom(currentUser.id);
 
     if (!room) {
       setErrorMessage(resolveDmErrorMessage(errorMessage));
@@ -115,10 +105,9 @@ export default function ChatRoomList() {
   }
 
   async function confirmDeleteRoom() {
-    const token = getAccessToken();
     const roomId = pendingDeleteRoom?.id;
 
-    if (!token || roomId == null) {
+    if (roomId == null) {
       return;
     }
 
@@ -126,7 +115,7 @@ export default function ChatRoomList() {
     setErrorMessage(null);
     setPendingDeleteRoom(null);
 
-    const deleted = await deleteRoom(token, roomId);
+    const deleted = await deleteRoom(roomId);
 
     if (!deleted) {
       setErrorMessage("채팅방 삭제에 실패했습니다.");

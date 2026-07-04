@@ -203,7 +203,7 @@ npm run dev
 
 ## 인증 (Phase 1)
 
-Google / Naver OAuth2 로그인 후 JWT access token을 발급합니다. OAuth 성공 시 백엔드가 프론트엔드 `/auth/callback?token={accessToken}&refreshToken={refreshToken}` 으로 리다이렉트합니다.
+Google / Naver OAuth2 로그인 후 JWT access token을 발급합니다. OAuth 성공 시 백엔드가 프론트엔드 `/auth/callback?code={exchangeCode}` 로 리다이렉트하고, 프론트는 `POST /api/auth/exchange`로 JWT를 교환합니다.
 
 ### 환경 변수
 

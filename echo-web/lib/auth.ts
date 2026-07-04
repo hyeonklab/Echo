@@ -14,7 +14,7 @@ export type AuthUser = {
  * localStorage에서 access token을 읽는다.
  */
 export function getAccessToken(): string | null {
-  if (typeof window === "undefined") {
+  if (globalThis.window === undefined) {
     return null;
   }
 
@@ -38,6 +38,26 @@ export function setTokens(accessToken: string, refreshToken?: string | null): vo
 export function clearTokens(): void {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
+}
+
+/**
+ * OAuth 일회용 교환 코드를 JWT로 교환한다.
+ */
+export async function exchangeAuthCode(code: string): Promise<{ accessToken: string; refreshToken: string } | null> {
+  const response = await fetch(`${API_URL}/api/auth/exchange`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ code }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return response.json() as Promise<{ accessToken: string; refreshToken: string }>;
 }
 
 /**

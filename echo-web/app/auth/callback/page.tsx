@@ -4,41 +4,70 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
-import { setTokens } from "@/lib/auth";
+import { exchangeAuthCode, setTokens } from "@/lib/auth";
+
+type AuthCallbackErrorProps = {
+  message: string;
+};
 
 /**
- * OAuth 콜백에서 query parameter 토큰을 저장한다.
+ * OAuth 콜백 오류 UI.
+ */
+function AuthCallbackError({ message }: Readonly<AuthCallbackErrorProps>) {
+  return (
+    <div className="space-y-4 text-center">
+      <p className="text-sm text-red-600 dark:text-red-400">{message}</p>
+      <Link
+        href="/login"
+        className="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+      >
+        로그인으로 돌아가기
+      </Link>
+    </div>
+  );
+}
+
+/**
+ * OAuth 콜백에서 일회용 교환 코드를 JWT로 교환해 저장한다.
  */
 function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const code = searchParams.get("code");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = searchParams.get("token");
-    const refreshToken = searchParams.get("refreshToken");
-
-    if (!token) {
-      setError("인증 토큰이 없습니다. 다시 로그인해 주세요.");
+    if (!code) {
       return;
     }
 
-    setTokens(token, refreshToken);
-    router.replace("/");
-  }, [router, searchParams]);
+    let cancelled = false;
+
+    exchangeAuthCode(code).then((tokens) => {
+      if (cancelled) {
+        return;
+      }
+
+      if (!tokens) {
+        setError("로그인 처리에 실패했습니다. 다시 로그인해 주세요.");
+        return;
+      }
+
+      setTokens(tokens.accessToken, tokens.refreshToken);
+      router.replace("/");
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router, code]);
+
+  if (!code) {
+    return <AuthCallbackError message="인증 코드가 없습니다. 다시 로그인해 주세요." />;
+  }
 
   if (error) {
-    return (
-      <div className="space-y-4 text-center">
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        <Link
-          href="/login"
-          className="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-        >
-          로그인으로 돌아가기
-        </Link>
-      </div>
-    );
+    return <AuthCallbackError message={error} />;
   }
 
   return <p className="text-sm text-zinc-500">로그인 처리 중...</p>;

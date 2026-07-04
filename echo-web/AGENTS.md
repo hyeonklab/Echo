@@ -30,7 +30,7 @@ public/       # 정적 자산
 
 ```
 /login → GET {API_URL}/oauth2/authorization/{google|naver}
-       → OAuth2 (Spring) → /auth/callback?token=...&refreshToken=...
+       → OAuth2 (Spring) → /auth/callback?code=... → POST /api/auth/exchange
        → setTokens() → localStorage
        → GET /api/auth/me (Bearer JWT) → 사용자 표시
 ```
@@ -67,6 +67,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8080
 - 인증 API 호출: `Authorization: Bearer ${accessToken}` 헤더.
 - 주요 엔드포인트:
   - `GET /api/auth/me` — 현재 사용자 (`AuthUser` 타입)
+  - `POST /api/auth/exchange` — `{ code }` body (OAuth 일회용 교환 코드)
   - `POST /api/auth/refresh` — `{ refreshToken }` body
   - `GET /oauth2/authorization/{google|naver}` — OAuth 시작 (리다이렉트)
 - `fetch` 시 사용자 정보 조회는 `cache: "no-store"` 사용(기존 패턴 유지).
@@ -77,6 +78,21 @@ NEXT_PUBLIC_API_URL=http://localhost:8080
 - `app/chat/page.tsx` — 플레이스홀더 UI.
 - `echo-server/.../websocket/` — 서버 측 stub.
 - **사용자가 명시적으로 요청하기 전까지** STOMP 클라이언트, WebSocket 연결, 채팅 UI/상태관리를 구현하지 않는다.
+
+## 코드 품질 (ESLint + SonarLint + SpotBugs/PMD)
+
+| 도구 | 대상 | 실행 |
+|------|------|------|
+| **ESLint** | echo-web (TS/React) | `npm run lint` |
+| **Extension Pack for Java** | echo-server IDE 진단 | Cursor 확장 설치 |
+| **SonarLint** | echo-web + echo-server | Cursor 확장 |
+| **SpotBugs / PMD** | echo-server (Maven) | `./mvnw verify -Pquality` |
+
+- `echo-web/eslint.config.mjs` — ESLint flat config.
+- `sonar-project.properties` — SonarLint 분석 범위.
+- `echo-server/config/spotbugs-exclude.xml` — SpotBugs Lombok false positive 필터.
+- `./mvnw spotbugs:check pmd:check` — quality 프로필 없이 단독 실행 가능.
+- `./mvnw verify -Pquality` — test + SpotBugs + PMD.
 
 ## TypeScript / React 컨vention
 

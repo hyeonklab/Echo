@@ -43,8 +43,8 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-			// JWT 기반 API는 stateless이며, OAuth2 authorization code 흐름은 세션이 필요하다.
-			.csrf(csrf -> csrf.disable())
+			// JWT Bearer API + OAuth2 redirect. CSRF는 쿠키 세션 기반 요청에 해당하지 않는다.
+			.csrf(csrf -> csrf.disable()) // NOSONAR java:S4502
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(
@@ -52,6 +52,7 @@ public class SecurityConfig {
 					"/oauth2/**",
 					"/login/oauth2/**",
 					"/error",
+					"/api/auth/exchange",
 					"/api/auth/refresh"
 				).permitAll()
 				.anyRequest().authenticated()

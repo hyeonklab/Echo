@@ -17,6 +17,14 @@ public class AuthService {
 
 	private final JwtTokenProvider jwtTokenProvider;
 	private final UserService userService;
+	private final AuthExchangeCodeService authExchangeCodeService;
+
+	/**
+	 * OAuth 로그인 후 발급된 일회용 교환 코드를 JWT로 교환한다.
+	 */
+	public TokenResponse exchangeAuthCode(String code) {
+		return authExchangeCodeService.consumeExchangeCode(code);
+	}
 
 	/**
 	 * refresh token으로 새 access/refresh 토큰을 발급한다.

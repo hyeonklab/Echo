@@ -8,7 +8,6 @@ import {
   clearTokens,
   fetchCurrentUser,
   getAccessToken,
-  getOAuthLoginUrl,
 } from "@/lib/auth";
 
 /**

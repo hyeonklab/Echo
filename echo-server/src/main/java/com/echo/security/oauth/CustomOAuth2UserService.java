@@ -6,6 +6,8 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import com.echo.domain.AuthProvider;
+
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -21,7 +23,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 		String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
-		if ("naver".equalsIgnoreCase(registrationId)) {
+		if (AuthProvider.NAVER.name().equalsIgnoreCase(registrationId)) {
 			return naverOAuth2UserService.loadUser(userRequest);
 		}
 

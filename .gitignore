@@ -73,5 +73,9 @@ venv/
 .understand-anything/fingerprints.json
 .understand-anything/diff-overlay.json
 
+# SonarQube / SonarLint
+.scannerwork/
+.sonar/
+
 # Agent local context (not shared)
 echo-web/CLAUDE.md

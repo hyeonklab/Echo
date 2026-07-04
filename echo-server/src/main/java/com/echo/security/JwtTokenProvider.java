@@ -1,24 +1,18 @@
 package com.echo.security;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
+import java.time.Instant;
 
 import javax.crypto.SecretKey;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import com.echo.domain.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 
 /**
  * JWT access/refresh 토큰 생성 및 검증.
  */
-@Component
 public class JwtTokenProvider {
 
 	private static final String TOKEN_TYPE_CLAIM = "type";
@@ -29,16 +23,8 @@ public class JwtTokenProvider {
 	private final long accessTokenExpirationMs;
 	private final long refreshTokenExpirationMs;
 
-	public JwtTokenProvider(
-		@Value("${echo.jwt.secret}") String secret,
-		@Value("${echo.jwt.access-token-expiration-ms}") long accessTokenExpirationMs,
-		@Value("${echo.jwt.refresh-token-expiration-ms}") long refreshTokenExpirationMs
-	) {
-		if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
-			throw new IllegalArgumentException("JWT_SECRET must be at least 32 bytes");
-		}
-
-		this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+	public JwtTokenProvider(SecretKey secretKey, long accessTokenExpirationMs, long refreshTokenExpirationMs) {
+		this.secretKey = secretKey;
 		this.accessTokenExpirationMs = accessTokenExpirationMs;
 		this.refreshTokenExpirationMs = refreshTokenExpirationMs;
 	}
@@ -79,16 +65,16 @@ public class JwtTokenProvider {
 	}
 
 	private String createToken(User user, long expirationMs, String tokenType) {
-		Date now = new Date();
-		Date expiry = new Date(now.getTime() + expirationMs);
+		Instant now = Instant.now();
+		Instant expiry = now.plusMillis(expirationMs);
 
 		return Jwts.builder()
 			.subject(String.valueOf(user.getId()))
 			.claim(TOKEN_TYPE_CLAIM, tokenType)
 			.claim("email", user.getEmail())
 			.claim("displayName", user.getDisplayName())
-			.issuedAt(now)
-			.expiration(expiry)
+			.claim(Claims.ISSUED_AT, now.getEpochSecond())
+			.claim(Claims.EXPIRATION, expiry.getEpochSecond())
 			.signWith(secretKey)
 			.compact();
 	}

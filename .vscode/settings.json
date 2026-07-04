@@ -1,0 +1,17 @@
+{
+  "sonarlint.disableTelemetry": true,
+  "eslint.useFlatConfig": true,
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.import.maven.enabled": true,
+  "java.project.importOnFirstTimeStartup": "automatic",
+  "maven.executable.preferMavenWrapper": true,
+  "sonarlint.automaticAnalysis": true
+}

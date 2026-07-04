@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.echo.domain.AuthProvider;
 import com.echo.domain.User;
 
 import lombok.Getter;
@@ -17,10 +18,20 @@ import lombok.Getter;
 @Getter
 public class UserPrincipal implements UserDetails {
 
-	private final User user;
+	private static final long serialVersionUID = 1L;
+
+	private final Long userId;
+	private final String email;
+	private final String displayName;
+	private final AuthProvider provider;
+	private final String passwordHash;
 
 	public UserPrincipal(User user) {
-		this.user = user;
+		this.userId = user.getId();
+		this.email = user.getEmail();
+		this.displayName = user.getDisplayName();
+		this.provider = user.getProvider();
+		this.passwordHash = user.getPasswordHash();
 	}
 
 	@Override
@@ -30,12 +41,12 @@ public class UserPrincipal implements UserDetails {
 
 	@Override
 	public String getPassword() {
-		return user.getPasswordHash();
+		return passwordHash;
 	}
 
 	@Override
 	public String getUsername() {
-		return String.valueOf(user.getId());
+		return String.valueOf(userId);
 	}
 
 	@Override

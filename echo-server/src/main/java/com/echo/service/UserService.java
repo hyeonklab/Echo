@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.echo.domain.AuthProvider;
 import com.echo.domain.User;
 import com.echo.repository.UserRepository;
+import com.echo.util.AttributeUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -62,8 +63,8 @@ public class UserService {
 
 	private String resolveProviderId(AuthProvider provider, OAuth2User oauth2User) {
 		String providerId = switch (provider) {
-			case GOOGLE -> stringValue(oauth2User.getAttribute("sub"));
-			case NAVER -> stringValue(oauth2User.getAttribute("id"));
+			case GOOGLE -> AttributeUtils.stringValue(oauth2User.getAttribute("sub"));
+			case NAVER -> AttributeUtils.stringValue(oauth2User.getAttribute("id"));
 			default -> null;
 		};
 
@@ -75,14 +76,14 @@ public class UserService {
 	}
 
 	private String resolveEmail(OAuth2User oauth2User) {
-		return stringValue(oauth2User.getAttribute("email"));
+		return AttributeUtils.stringValue(oauth2User.getAttribute("email"));
 	}
 
 	private String resolveDisplayName(OAuth2User oauth2User) {
-		String displayName = stringValue(oauth2User.getAttribute("name"));
+		String displayName = AttributeUtils.stringValue(oauth2User.getAttribute("name"));
 
 		if (displayName == null || displayName.isBlank()) {
-			displayName = stringValue(oauth2User.getAttribute("nickname"));
+			displayName = AttributeUtils.stringValue(oauth2User.getAttribute("nickname"));
 		}
 
 		if (displayName == null || displayName.isBlank()) {
@@ -90,10 +91,6 @@ public class UserService {
 		}
 
 		return displayName;
-	}
-
-	private String stringValue(Object value) {
-		return value == null ? null : String.valueOf(value);
 	}
 
 }

@@ -7,11 +7,26 @@ type LoginPageProps = {
 };
 
 /**
+ * OAuth 로그인 오류 코드를 사용자 메시지로 변환한다.
+ */
+function resolveLoginError(errorCode: string | null): string | null {
+  if (!errorCode) {
+    return null;
+  }
+
+  if (errorCode === "oauth_failed") {
+    return "소셜 로그인에 실패했습니다. 다시 시도해 주세요.";
+  }
+
+  return "로그인에 실패했습니다. 다시 시도해 주세요.";
+}
+
+/**
  * OAuth 로그인 페이지.
  */
-export default async function LoginPage({ searchParams }: LoginPageProps) {
+export default async function LoginPage({ searchParams }: Readonly<LoginPageProps>) {
   const params = await searchParams;
-  const errorMessage = params.error ? decodeURIComponent(params.error) : null;
+  const errorMessage = resolveLoginError(params.error ?? null);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-6 py-16 font-sans dark:bg-zinc-950">
@@ -26,7 +41,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         {errorMessage ? (
           <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
-            로그인에 실패했습니다: {errorMessage}
+            {errorMessage}
           </p>
         ) : null}
 

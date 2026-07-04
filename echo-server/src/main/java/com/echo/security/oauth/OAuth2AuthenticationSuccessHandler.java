@@ -11,6 +11,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.echo.domain.User;
 import com.echo.security.JwtTokenProvider;
+import com.echo.service.AuthExchangeCodeService;
 import com.echo.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * OAuth2 로그인 성공 시 사용자 upsert 후 JWT를 발급하고 프론트엔드로 리다이렉트한다.
  *
- * 토큰은 query parameter로 전달한다: /auth/callback?token={accessToken}&refreshToken={refreshToken}
+ * JWT는 URL에 직접 노출하지 않고 일회용 교환 코드로 전달한다: /auth/callback?code={exchangeCode}
  */
 @Component
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 	private final UserService userService;
 	private final JwtTokenProvider jwtTokenProvider;
+	private final AuthExchangeCodeService authExchangeCodeService;
 
 	@Value("${echo.frontend.url}")
 	private String frontendUrl;
@@ -45,11 +47,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		User user = userService.upsertOAuthUser(registrationId, oauth2User);
 		String accessToken = jwtTokenProvider.createAccessToken(user);
 		String refreshToken = jwtTokenProvider.createRefreshToken(user);
+		String exchangeCode = authExchangeCodeService.createExchangeCode(accessToken, refreshToken);
 
 		String redirectUrl = UriComponentsBuilder
 			.fromUriString(frontendUrl + "/auth/callback")
-			.queryParam("token", accessToken)
-			.queryParam("refreshToken", refreshToken)
+			.queryParam("code", exchangeCode)
 			.build(true)
 			.toUriString();
 

@@ -12,6 +12,8 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import com.echo.util.AttributeUtils;
+
 /**
  * 네이버 OAuth2 사용자 정보 응답을 파싱한다.
  */
@@ -28,9 +30,9 @@ public class NaverOAuth2UserService extends DefaultOAuth2UserService {
 			throw new OAuth2AuthenticationException("Naver OAuth response is missing");
 		}
 
-		String id = stringValue(response.get("id"));
-		String email = stringValue(response.get("email"));
-		String nickname = stringValue(response.get("nickname"));
+		String id = AttributeUtils.stringValue(response.get("id"));
+		String email = AttributeUtils.stringValue(response.get("email"));
+		String nickname = AttributeUtils.stringValue(response.get("nickname"));
 
 		if (id == null || id.isBlank()) {
 			throw new OAuth2AuthenticationException("Naver OAuth id is missing");
@@ -47,10 +49,6 @@ public class NaverOAuth2UserService extends DefaultOAuth2UserService {
 			attributes,
 			"id"
 		);
-	}
-
-	private String stringValue(Object value) {
-		return value == null ? null : String.valueOf(value);
 	}
 
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+	<!--
+		Lombok @Builder/@Getter 등으로 생성되는 코드에 대한 false positive 완화.
+	-->
+	<Match>
+		<Bug code="EI,EI2"/>
+	</Match>
+</FindBugsFilter>

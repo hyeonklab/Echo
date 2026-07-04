@@ -1,9 +1,9 @@
 package com.echo.security.oauth;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
@@ -13,10 +13,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * OAuth2 로그인 실패 시 프론트엔드 로그인 페이지로 에러와 함께 리다이렉트한다.
+ * OAuth2 로그인 실패 시 프론트엔드 로그인 페이지로 리다이렉트한다.
  */
 @Component
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
+
+	private static final Logger log = LoggerFactory.getLogger(OAuth2AuthenticationFailureHandler.class);
+	private static final String OAUTH_FAILED_ERROR_CODE = "oauth_failed";
 
 	@Value("${echo.frontend.url}")
 	private String frontendUrl;
@@ -27,8 +30,9 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 		HttpServletResponse response,
 		AuthenticationException exception
 	) throws IOException {
-		String message = URLEncoder.encode(exception.getMessage(), StandardCharsets.UTF_8);
-		String redirectUrl = frontendUrl + "/login?error=" + message;
+		log.warn("OAuth authentication failed", exception);
+
+		String redirectUrl = frontendUrl + "/login?error=" + OAUTH_FAILED_ERROR_CODE;
 
 		getRedirectStrategy().sendRedirect(request, response, redirectUrl);
 	}

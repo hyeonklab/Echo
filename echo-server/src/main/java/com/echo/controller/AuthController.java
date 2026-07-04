@@ -1,5 +1,7 @@
 package com.echo.controller;
 
+import java.util.function.Supplier;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.echo.dto.AuthExchangeCodeRequest;
 import com.echo.dto.RefreshTokenRequest;
 import com.echo.dto.TokenResponse;
 import com.echo.dto.UserResponse;
@@ -37,7 +40,15 @@ public class AuthController {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
 		}
 
-		return UserResponse.from(principal.getUser());
+		return UserResponse.fromPrincipal(principal);
+	}
+
+	/**
+	 * OAuth 일회용 교환 코드를 JWT로 교환한다.
+	 */
+	@PostMapping("/exchange")
+	public TokenResponse exchange(@Valid @RequestBody AuthExchangeCodeRequest request) {
+		return executeAuthAction(() -> authService.exchangeAuthCode(request.code()));
 	}
 
 	/**
@@ -45,11 +56,15 @@ public class AuthController {
 	 */
 	@PostMapping("/refresh")
 	public TokenResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
+		return executeAuthAction(() -> authService.refreshTokens(request.refreshToken()));
+	}
+
+	private TokenResponse executeAuthAction(Supplier<TokenResponse> action) {
 		try {
-			return authService.refreshTokens(request.refreshToken());
+			return action.get();
 		}
 		catch (IllegalArgumentException ex) {
-			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, ex.getMessage());
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, ex.getMessage(), ex);
 		}
 	}
 

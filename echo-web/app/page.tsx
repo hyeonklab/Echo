@@ -9,7 +9,7 @@ export default function Home() {
           실시간 메신저
         </h1>
         <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-400">
-          Google 또는 Naver 계정으로 로그인하고 실시간 채팅을 시작하세요.
+          Google 계정으로 로그인하고 실시간 채팅을 시작하세요.
         </p>
         <HomeAuth />
       </div>

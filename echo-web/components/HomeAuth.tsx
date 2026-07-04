@@ -18,16 +18,20 @@ export default function HomeAuth() {
 
   useEffect(() => {
     async function loadUser() {
-      const currentUser = await fetchSessionUser();
+      try {
+        const currentUser = await fetchSessionUser();
 
-      if (!currentUser) {
+        if (!currentUser) {
+          setUser(null);
+          return;
+        }
+
+        setUser(currentUser);
+      } catch {
         setUser(null);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      setUser(currentUser);
-      setLoading(false);
     }
 
     loadUser();

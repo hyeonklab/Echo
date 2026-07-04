@@ -1,6 +1,5 @@
 import { ensureAccessToken } from "@/lib/auth";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+import { apiFetch, getApiUrl } from "@/lib/api";
 
 export type SearchUser = {
   id: number;
@@ -57,7 +56,7 @@ export async function searchUsers(keyword: string): Promise<SearchUser[]> {
   }
 
   const params = new URLSearchParams({ q: trimmed });
-  const response = await fetch(`${API_URL}/api/users/search?${params.toString()}`, {
+  const response = await apiFetch(`${getApiUrl()}/api/users/search?${params.toString()}`, {
     headers: authHeaders(token),
     cache: "no-store",
   });

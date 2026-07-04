@@ -1,6 +1,5 @@
 import { ensureAccessToken } from "@/lib/auth";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+import { apiFetch, getApiUrl } from "@/lib/api";
 
 export type Message = {
   id: number;
@@ -57,8 +56,8 @@ export async function fetchMessages(
   }
 
   const query = params.toString();
-  const response = await fetch(
-    `${API_URL}/api/rooms/${roomId}/messages${query ? `?${query}` : ""}`,
+  const response = await apiFetch(
+    `${getApiUrl()}/api/rooms/${roomId}/messages${query ? `?${query}` : ""}`,
     {
       headers: authHeaders(token),
       cache: "no-store",
@@ -82,7 +81,7 @@ export async function sendMessage(roomId: number, content: string): Promise<Mess
     return null;
   }
 
-  const response = await fetch(`${API_URL}/api/rooms/${roomId}/messages`, {
+  const response = await apiFetch(`${getApiUrl()}/api/rooms/${roomId}/messages`, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify({ content }),

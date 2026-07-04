@@ -1,6 +1,5 @@
 import { ensureAccessToken } from "@/lib/auth";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+import { apiFetch, getApiUrl } from "@/lib/api";
 
 export type RoomType = "GROUP" | "DM" | "SELF";
 
@@ -62,7 +61,7 @@ export async function fetchRooms(): Promise<Room[]> {
     return [];
   }
 
-  const response = await fetch(`${API_URL}/api/rooms`, {
+  const response = await apiFetch(`${getApiUrl()}/api/rooms`, {
     headers: authHeaders(token),
     cache: "no-store",
   });
@@ -84,7 +83,7 @@ export async function fetchRoom(roomId: number): Promise<Room | null> {
     return null;
   }
 
-  const response = await fetch(`${API_URL}/api/rooms/${roomId}`, {
+  const response = await apiFetch(`${getApiUrl()}/api/rooms/${roomId}`, {
     headers: authHeaders(token),
     cache: "no-store",
   });
@@ -109,7 +108,7 @@ export async function createGroupRoom(
     return null;
   }
 
-  const response = await fetch(`${API_URL}/api/rooms`, {
+  const response = await apiFetch(`${getApiUrl()}/api/rooms`, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify({ name, memberUserIds }),
@@ -152,7 +151,7 @@ export async function createDmRoom(
     return { room: null, errorMessage: "Authentication required" };
   }
 
-  const response = await fetch(`${API_URL}/api/rooms/dm`, {
+  const response = await apiFetch(`${getApiUrl()}/api/rooms/dm`, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify({ targetUserId }),
@@ -179,7 +178,7 @@ export async function inviteRoomMember(roomId: number, userId: number): Promise<
     return null;
   }
 
-  const response = await fetch(`${API_URL}/api/rooms/${roomId}/members`, {
+  const response = await apiFetch(`${getApiUrl()}/api/rooms/${roomId}/members`, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify({ userId }),
@@ -203,7 +202,7 @@ export async function deleteRoom(roomId: number): Promise<boolean> {
     return false;
   }
 
-  const response = await fetch(`${API_URL}/api/rooms/${roomId}`, {
+  const response = await apiFetch(`${getApiUrl()}/api/rooms/${roomId}`, {
     method: "DELETE",
     headers: authHeaders(token),
     cache: "no-store",

@@ -70,6 +70,43 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     loadChatRoom();
   }, [roomId, router]);
 
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    async function pollMessages() {
+      const history = await fetchMessages(roomId);
+
+      if (!history || history.messages.length === 0) {
+        return;
+      }
+
+      setMessages((prev) => {
+        const existingIds = new Set(prev.map((item) => item.id));
+        const merged = [...prev];
+
+        for (const message of history.messages) {
+          if (!existingIds.has(message.id)) {
+            merged.push(message);
+          }
+        }
+
+        merged.sort((a, b) => a.id - b.id);
+
+        return merged;
+      });
+    }
+
+    const intervalId = globalThis.setInterval(() => {
+      void pollMessages();
+    }, 4000);
+
+    return () => {
+      globalThis.clearInterval(intervalId);
+    };
+  }, [roomId, loading]);
+
   function focusMessageInput() {
     messageInputRef.current?.focus({ preventScroll: true });
   }

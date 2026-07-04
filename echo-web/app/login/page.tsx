@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { getOAuthLoginUrl } from "@/lib/auth";
+import { getOAuthLoginUrl, IS_NAVER_LOGIN_ENABLED } from "@/lib/auth";
 
 type LoginPageProps = {
   searchParams: Promise<{ error?: string }>;
@@ -52,12 +52,14 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
           >
             Google로 계속하기
           </a>
-          <a
-            href={getOAuthLoginUrl("naver")}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#03C75A] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#02b351]"
-          >
-            Naver로 계속하기
-          </a>
+          {IS_NAVER_LOGIN_ENABLED ? (
+            <a
+              href={getOAuthLoginUrl("naver")}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#03C75A] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#02b351]"
+            >
+              Naver로 계속하기
+            </a>
+          ) : null}
         </div>
       </div>
     </main>

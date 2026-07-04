@@ -1,7 +1,10 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+import { apiFetch, getApiUrl } from "@/lib/api";
 
 export const ACCESS_TOKEN_KEY = "accessToken";
 export const REFRESH_TOKEN_KEY = "refreshToken";
+
+/** Naver OAuth 클라이언트 설정 완료 시 true로 변경한다. */
+export const IS_NAVER_LOGIN_ENABLED = false;
 
 export type AuthUser = {
   id: number;
@@ -63,7 +66,7 @@ export function clearTokens(): void {
  */
 export async function logout(): Promise<void> {
   try {
-    await fetch(`${API_URL}/api/auth/logout`, {
+    await apiFetch(`${getApiUrl()}/api/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
@@ -78,7 +81,7 @@ export async function logout(): Promise<void> {
  * OAuth 일회용 교환 코드를 JWT로 교환한다.
  */
 export async function exchangeAuthCode(code: string): Promise<{ accessToken: string; refreshToken: string } | null> {
-  const response = await fetch(`${API_URL}/api/auth/exchange`, {
+  const response = await apiFetch(`${getApiUrl()}/api/auth/exchange`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -98,20 +101,24 @@ export async function exchangeAuthCode(code: string): Promise<{ accessToken: str
  * refresh token으로 access/refresh token을 재발급한다.
  */
 export async function refreshAccessTokens(refreshToken: string): Promise<TokenResponse | null> {
-  const response = await fetch(`${API_URL}/api/auth/refresh`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ refreshToken }),
-    cache: "no-store",
-  });
+  try {
+    const response = await apiFetch(`${getApiUrl()}/api/auth/refresh`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken }),
+      cache: "no-store",
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return null;
+    }
+
+    return response.json() as Promise<TokenResponse>;
+  } catch {
     return null;
   }
-
-  return response.json() as Promise<TokenResponse>;
 }
 
 /**
@@ -174,23 +181,27 @@ async function refreshAndStore(refreshToken: string): Promise<string | null> {
  * OAuth 로그인 URL을 반환한다.
  */
 export function getOAuthLoginUrl(provider: "google" | "naver"): string {
-  return `${API_URL}/oauth2/authorization/${provider}`;
+  return `${getApiUrl()}/oauth2/authorization/${provider}`;
 }
 
 /**
  * 현재 로그인 사용자 정보를 조회한다.
  */
 export async function fetchCurrentUser(token: string): Promise<AuthUser | null> {
-  const response = await fetch(`${API_URL}/api/auth/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    cache: "no-store",
-  });
+  try {
+    const response = await apiFetch(`${getApiUrl()}/api/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return null;
+    }
+
+    return response.json() as Promise<AuthUser>;
+  } catch {
     return null;
   }
-
-  return response.json() as Promise<AuthUser>;
 }

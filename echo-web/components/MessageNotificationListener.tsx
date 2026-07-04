@@ -29,9 +29,11 @@ export default function MessageNotificationListener() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [enabled, setEnabled] = useState(false);
 
-  pathnameRef.current = pathname;
-  roomsRef.current = rooms;
-  currentUserRef.current = currentUser;
+  useEffect(() => {
+    pathnameRef.current = pathname;
+    roomsRef.current = rooms;
+    currentUserRef.current = currentUser;
+  }, [pathname, rooms, currentUser]);
 
   const loadNotificationContext = useCallback(async () => {
     const token = getAccessToken();
@@ -60,8 +62,10 @@ export default function MessageNotificationListener() {
   }, []);
 
   useEffect(() => {
-    void loadNotificationContext();
-    void requestNotificationPermission();
+    const timerId = globalThis.setTimeout(() => {
+      void loadNotificationContext();
+      void requestNotificationPermission();
+    }, 0);
 
     function handleVisibilityChange() {
       if (globalThis.document.visibilityState === "visible") {
@@ -73,6 +77,7 @@ export default function MessageNotificationListener() {
     globalThis.document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
+      globalThis.clearTimeout(timerId);
       globalThis.window.removeEventListener("focus", loadNotificationContext);
       globalThis.document.removeEventListener("visibilitychange", handleVisibilityChange);
     };

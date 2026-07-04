@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { getAccessToken } from "@/lib/auth";
 import {
@@ -14,49 +14,64 @@ import { subscribePresenceUpdates } from "@/lib/stomp";
  * 로그인 사용자의 온라인 상태를 구독하고 앱 전역 이벤트로 전파한다.
  */
 export default function PresenceListener() {
-  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    let active = true;
+    let unsubscribePresence: () => void = () => undefined;
 
-  const loadPresenceSnapshot = useCallback(async () => {
-    const token = getAccessToken();
+    async function refreshPresenceSnapshot() {
+      const token = getAccessToken();
 
-    if (!token) {
-      setEnabled(false);
-      return;
+      if (!token || !active) {
+        return;
+      }
+
+      const onlineUserIds = await fetchOnlineUserIds();
+
+      if (!active) {
+        return;
+      }
+
+      publishPresenceSnapshot(onlineUserIds);
     }
 
-    const onlineUserIds = await fetchOnlineUserIds();
+    async function setupPresence() {
+      await refreshPresenceSnapshot();
 
-    publishPresenceSnapshot(onlineUserIds);
-    setEnabled(true);
-  }, []);
+      if (!active || !getAccessToken()) {
+        return;
+      }
 
-  useEffect(() => {
-    void loadPresenceSnapshot();
+      unsubscribePresence();
+      unsubscribePresence = subscribePresenceUpdates((update) => {
+        publishPresenceUpdate(update);
+      });
+    }
+
+    const timerId = globalThis.setTimeout(() => {
+      void setupPresence();
+    }, 0);
 
     function handleVisibilityChange() {
       if (globalThis.document.visibilityState === "visible") {
-        void loadPresenceSnapshot();
+        void refreshPresenceSnapshot();
       }
     }
 
-    globalThis.window.addEventListener("focus", loadPresenceSnapshot);
+    function handleFocus() {
+      void refreshPresenceSnapshot();
+    }
+
+    globalThis.window.addEventListener("focus", handleFocus);
     globalThis.document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      globalThis.window.removeEventListener("focus", loadPresenceSnapshot);
+      active = false;
+      globalThis.clearTimeout(timerId);
+      unsubscribePresence();
+      globalThis.window.removeEventListener("focus", handleFocus);
       globalThis.document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [loadPresenceSnapshot]);
-
-  useEffect(() => {
-    if (!enabled) {
-      return;
-    }
-
-    return subscribePresenceUpdates((update) => {
-      publishPresenceUpdate(update);
-    });
-  }, [enabled]);
+  }, []);
 
   return null;
 }

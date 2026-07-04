@@ -42,9 +42,14 @@ export default function PresenceListener() {
       }
 
       unsubscribePresence();
-      unsubscribePresence = subscribePresenceUpdates((update) => {
-        publishPresenceUpdate(update);
-      });
+      unsubscribePresence = subscribePresenceUpdates(
+        (update) => {
+          publishPresenceUpdate(update);
+        },
+        () => {
+          void refreshPresenceSnapshot();
+        },
+      );
     }
 
     const timerId = globalThis.setTimeout(() => {

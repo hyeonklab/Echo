@@ -39,7 +39,12 @@ function resolveDmErrorMessage(errorMessage: string | null): string {
 /**
  * 채팅방 목록 및 생성 UI.
  */
-export default function ChatRoomList() {
+type ChatRoomListProps = {
+  mode?: "page" | "panel";
+  activeRoomId?: number | null;
+};
+
+export default function ChatRoomList({ mode = "page", activeRoomId = null }: ChatRoomListProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -241,11 +246,202 @@ export default function ChatRoomList() {
   }
 
   if (loading) {
-    return <p className="text-sm text-zinc-500">채팅방 목록 불러오는 중...</p>;
+    return <p className="p-4 text-sm text-zinc-500">채팅방 목록 불러오는 중...</p>;
   }
 
+  const isPanel = mode === "panel";
+
+  const roomListSection = (
+    <section className="space-y-2">
+      <h2 className={`font-semibold text-zinc-900 dark:text-zinc-50 ${isPanel ? "text-sm" : "text-lg"}`}>
+        내 채팅방
+      </h2>
+
+      {rooms.length === 0 ? (
+        <p className="text-sm text-zinc-500">참여 중인 채팅방이 없습니다.</p>
+      ) : (
+        <ul className={isPanel ? "space-y-1" : "space-y-3"}>
+          {rooms.map((room) => {
+            const isActive = activeRoomId === room.id;
+
+            return (
+              <li
+                key={room.id}
+                className={
+                  isPanel
+                    ? `rounded-lg px-3 py-2 transition ${
+                        isActive
+                          ? "bg-zinc-100 dark:bg-zinc-800"
+                          : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                      }`
+                    : "rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50"
+                }
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <Link
+                        href={`/chat/${room.id}`}
+                        className="truncate font-medium text-zinc-900 transition hover:text-zinc-600 dark:text-zinc-100 dark:hover:text-zinc-300"
+                      >
+                        {currentUser ? getRoomDisplayName(room, currentUser.id) : room.name}
+                      </Link>
+                      {room.lastMessage ? (
+                        <span className="shrink-0 text-[11px] text-zinc-400">
+                          {formatLastMessageTime(room.lastMessage.createdAt)}
+                        </span>
+                      ) : null}
+                    </div>
+                    {!isPanel ? (
+                      <p className="mt-1 truncate text-xs text-zinc-500">{formatRoomMemberSummary(room)}</p>
+                    ) : null}
+                    <p className={`truncate text-zinc-600 dark:text-zinc-300 ${isPanel ? "mt-0.5 text-xs" : "mt-2 text-sm"}`}>
+                      {currentUser ? formatLastMessagePreview(room, currentUser.id) : "메시지가 없습니다."}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    {room.unreadCount > 0 ? (
+                      <span className="min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[11px] font-semibold text-white">
+                        {formatUnreadCount(room.unreadCount ?? 0)}
+                      </span>
+                    ) : null}
+                    {!isPanel ? (
+                      <button
+                        type="button"
+                        onClick={() => openDeleteConfirm(room)}
+                        disabled={submitting}
+                        className="rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950"
+                      >
+                        삭제
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+
+  const createSections = (
+    <>
+      {notificationGuide ? (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+          {notificationGuide}
+        </p>
+      ) : null}
+
+      {errorMessage ? (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+          {errorMessage}
+        </p>
+      ) : null}
+
+      <section className="space-y-3">
+        <h2 className={`font-semibold text-zinc-900 dark:text-zinc-50 ${isPanel ? "text-sm" : "text-lg"}`}>
+          그룹 채팅방 만들기
+        </h2>
+        <form className="flex flex-col gap-2" onSubmit={handleCreateGroup}>
+          <input
+            type="text"
+            value={groupName}
+            onChange={(event) => setGroupName(event.target.value)}
+            placeholder="채팅방 이름"
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            disabled={submitting}
+          />
+          <button
+            type="submit"
+            disabled={submitting || !groupName.trim()}
+            className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+          >
+            생성
+          </button>
+        </form>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className={`font-semibold text-zinc-900 dark:text-zinc-50 ${isPanel ? "text-sm" : "text-lg"}`}>
+          1:1 대화 시작
+        </h2>
+        {!isPanel ? (
+          <p className="text-sm text-zinc-500">이름 또는 이메일로 사용자를 검색해 DM을 시작하세요.</p>
+        ) : null}
+        <form className="flex flex-col gap-2" onSubmit={handleSearchUsers}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="이름 또는 이메일"
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            disabled={submitting || searching}
+          />
+          <button
+            type="submit"
+            disabled={submitting || searching || searchQuery.trim().length < 2}
+            className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+          >
+            {searching ? "검색 중..." : "검색"}
+          </button>
+        </form>
+
+        {searchResults.length > 0 ? (
+          <ul className="space-y-2">
+            {searchResults.map((user) => (
+              <li
+                key={user.id}
+                className="flex items-center justify-between gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800/50"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">{user.displayName}</p>
+                  <p className="truncate text-xs text-zinc-500">
+                    {user.email ?? "이메일 없음"} · {getProviderLabel(user.provider)}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleAddFriend(user)}
+                    disabled={submitting || friendIds.has(user.id)}
+                    className="rounded-lg border border-zinc-300 px-2 py-1 text-[11px] font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  >
+                    {friendIds.has(user.id) ? "친구" : "추가"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStartDm(user)}
+                    disabled={submitting}
+                    className="rounded-lg border border-zinc-300 px-2 py-1 text-[11px] font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  >
+                    대화
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
+
+      <section className="space-y-2">
+        <h2 className={`font-semibold text-zinc-900 dark:text-zinc-50 ${isPanel ? "text-sm" : "text-lg"}`}>
+          나와의 대화
+        </h2>
+        <button
+          type="button"
+          onClick={handleCreateSelfChat}
+          disabled={submitting || !currentUser}
+          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          나와의 대화 시작
+        </button>
+      </section>
+    </>
+  );
+
   return (
-    <div className="space-y-8">
+    <div className={isPanel ? "flex h-full flex-col overflow-hidden" : "space-y-8"}>
       {pendingDeleteRoom ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <button
@@ -293,171 +489,37 @@ export default function ChatRoomList() {
         </div>
       ) : null}
 
-      {notificationGuide ? (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          {notificationGuide}
-        </p>
-      ) : null}
-
-      {errorMessage ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
-          {errorMessage}
-        </p>
-      ) : null}
-
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">그룹 채팅방 만들기</h2>
-        <form className="flex flex-col gap-3 sm:flex-row" onSubmit={handleCreateGroup}>
-          <input
-            type="text"
-            value={groupName}
-            onChange={(event) => setGroupName(event.target.value)}
-            placeholder="채팅방 이름"
-            className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
-            disabled={submitting}
-          />
-          <button
-            type="submit"
-            disabled={submitting || !groupName.trim()}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-          >
-            생성
-          </button>
-        </form>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">1:1 대화 시작</h2>
-        <p className="text-sm text-zinc-500">이름 또는 이메일로 사용자를 검색해 DM을 시작하세요.</p>
-        <form className="flex flex-col gap-3 sm:flex-row" onSubmit={handleSearchUsers}>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="이름 또는 이메일"
-            className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
-            disabled={submitting || searching}
-          />
-          <button
-            type="submit"
-            disabled={submitting || searching || searchQuery.trim().length < 2}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-          >
-            {searching ? "검색 중..." : "검색"}
-          </button>
-        </form>
-
-        {searchResults.length > 0 ? (
-          <ul className="space-y-2">
-            {searchResults.map((user) => (
-              <li
-                key={user.id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800/50"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-zinc-900 dark:text-zinc-100">{user.displayName}</p>
-                  <p className="truncate text-xs text-zinc-500">
-                    {user.email ?? "이메일 없음"} · {getProviderLabel(user.provider)}
-                  </p>
-                </div>
-                <div className="flex shrink-0 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleAddFriend(user)}
-                    disabled={submitting || friendIds.has(user.id)}
-                    className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                  >
-                    {friendIds.has(user.id) ? "친구" : "친구 추가"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleStartDm(user)}
-                    disabled={submitting}
-                    className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                  >
-                    대화 시작
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">나와의 대화</h2>
-        <button
-          type="button"
-          onClick={handleCreateSelfChat}
-          disabled={submitting || !currentUser}
-          className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
-        >
-          나와의 대화 시작
-        </button>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">내 채팅방</h2>
-
-        {rooms.length === 0 ? (
-          <p className="text-sm text-zinc-500">참여 중인 채팅방이 없습니다.</p>
-        ) : (
-          <ul className="space-y-3">
-            {rooms.map((room) => (
-              <li
-                key={room.id}
-                className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <Link
-                        href={`/chat/${room.id}`}
-                        className="truncate font-medium text-zinc-900 transition hover:text-zinc-600 dark:text-zinc-100 dark:hover:text-zinc-300"
-                      >
-                        {currentUser ? getRoomDisplayName(room, currentUser.id) : room.name}
-                      </Link>
-                      {room.lastMessage ? (
-                        <span className="shrink-0 text-[11px] text-zinc-400">
-                          {formatLastMessageTime(room.lastMessage.createdAt)}
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="mt-1 truncate text-xs text-zinc-500">{formatRoomMemberSummary(room)}</p>
-                    <p className="mt-2 truncate text-sm text-zinc-600 dark:text-zinc-300">
-                      {currentUser ? formatLastMessagePreview(room, currentUser.id) : "메시지가 없습니다."}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-2">
-                    {room.unreadCount > 0 ? (
-                      <span className="min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[11px] font-semibold text-white">
-                        {formatUnreadCount(room.unreadCount ?? 0)}
-                      </span>
-                    ) : null}
-                    <button
-                      type="button"
-                      onClick={() => openDeleteConfirm(room)}
-                      disabled={submitting}
-                      className="rounded-lg border border-red-300 px-2 py-1 text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950"
-                    >
-                      삭제
-                    </button>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <div className="flex flex-wrap gap-3">
-        <Link
-          href="/"
-          className="inline-flex items-center justify-center rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
-        >
-          홈으로
-        </Link>
-      </div>
+      {isPanel ? (
+        <>
+          <header className="shrink-0 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
+            <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">채팅</h1>
+          </header>
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+            <div className="space-y-4">
+              {roomListSection}
+              <details className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800/50">
+                <summary className="cursor-pointer text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                  새 채팅 만들기
+                </summary>
+                <div className="mt-3 space-y-4">{createSections}</div>
+              </details>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="space-y-8">
+          {createSections}
+          {roomListSection}
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            >
+              홈으로
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

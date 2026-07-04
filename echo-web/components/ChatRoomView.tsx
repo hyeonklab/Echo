@@ -449,7 +449,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   }
 
   return (
-    <div className="flex h-[70vh] min-h-[32rem] flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <div className="flex items-start justify-between gap-4 border-b border-zinc-200 pb-4 dark:border-zinc-700">
         <div className="min-w-0 flex-1">
           {isRenaming ? (

@@ -107,7 +107,10 @@ export function subscribeRoomRead(roomId: number, onRead: RoomReadHandler): () =
 /**
  * 사용자 온라인 상태 STOMP 구독을 시작한다.
  */
-export function subscribePresenceUpdates(onPresence: PresenceHandler): () => void {
+export function subscribePresenceUpdates(
+  onPresence: PresenceHandler,
+  onConnected?: () => void,
+): () => void {
   const accessToken = getAccessToken();
 
   if (!accessToken) {
@@ -126,6 +129,8 @@ export function subscribePresenceUpdates(onPresence: PresenceHandler): () => voi
 
         onPresence(update);
       });
+
+      onConnected?.();
     },
   });
 

@@ -54,7 +54,7 @@ function AuthCallbackContent() {
       }
 
       setTokens(tokens.accessToken, tokens.refreshToken);
-      router.replace("/");
+      router.replace("/friends");
     });
 
     return () => {

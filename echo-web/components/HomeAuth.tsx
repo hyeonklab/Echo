@@ -50,7 +50,7 @@ export default function HomeAuth() {
 
   if (!user) {
     return (
-      <div className="mt-8 flex flex-col gap-3">
+      <div className="mt-6 flex flex-col gap-3">
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           로그인 후 채팅 기능을 사용할 수 있습니다.
         </p>
@@ -65,7 +65,7 @@ export default function HomeAuth() {
   }
 
   return (
-    <div className="mt-8 space-y-4 rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-800/50">
+    <div className="mt-6 space-y-4 rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-800/50">
       <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
         로그인됨
       </p>
@@ -85,16 +85,16 @@ export default function HomeAuth() {
       </dl>
       <div className="flex flex-wrap gap-3 pt-2">
         <Link
-          href="/chat"
+          href="/friends"
           className="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
         >
-          채팅으로 이동
+          친구 목록으로 이동
         </Link>
         <Link
-          href="/friends"
+          href="/chat"
           className="inline-flex items-center justify-center rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
         >
-          친구 목록
+          채팅으로 이동
         </Link>
         <button
           type="button"

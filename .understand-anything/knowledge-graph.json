@@ -1,0 +1,2851 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "Echo",
+    "languages": [
+      "css",
+      "java",
+      "javascript",
+      "json",
+      "markdown",
+      "sql",
+      "typescript",
+      "xml",
+      "yaml"
+    ],
+    "frameworks": [
+      "spring-boot",
+      "next",
+      "Docker",
+      "Docker Compose"
+    ],
+    "description": "실시간 그룹 채팅과 1:1 DM을 지원하는 메신저 — Spring Boot 백엔드(echo-server) + Next.js 프론트엔드(echo-web), OAuth/JWT 인증, PostgreSQL, STOMP WebSocket",
+    "analyzedAt": "2026-07-04T09:01:56.065Z",
+    "gitCommitHash": "1fd835a4fa63c8824fa417da426ee33472e3955e"
+  },
+  "nodes": [
+    {
+      "id": "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "type": "file",
+      "name": "AuthController.java",
+      "filePath": "echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "summary": "인증 REST API — 현재 사용자 조회(/me), refresh token 재발급(/refresh).",
+      "tags": [
+        "api-handler",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/controller/AuthController.java:AuthController",
+      "type": "class",
+      "name": "AuthController",
+      "filePath": "echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "summary": "AuthController 클래스 — echo-server/src/main/java/com/echo/controller/AuthController.java 내 정의.",
+      "tags": [
+        "api-handler",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/controller/AuthController.java:me",
+      "type": "function",
+      "name": "me",
+      "filePath": "echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "summary": "me 함수.",
+      "tags": [
+        "api-handler",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/controller/AuthController.java:refresh",
+      "type": "function",
+      "name": "refresh",
+      "filePath": "echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "summary": "refresh 함수.",
+      "tags": [
+        "api-handler",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/dto/RefreshTokenRequest.java",
+      "type": "file",
+      "name": "RefreshTokenRequest.java",
+      "filePath": "echo-server/src/main/java/com/echo/dto/RefreshTokenRequest.java",
+      "summary": "echo-server/src/main/java/com/echo/dto/RefreshTokenRequest.java — code 파일.",
+      "tags": [
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/dto/RefreshTokenRequest.java:RefreshTokenRequest",
+      "type": "class",
+      "name": "RefreshTokenRequest",
+      "filePath": "echo-server/src/main/java/com/echo/dto/RefreshTokenRequest.java",
+      "summary": "RefreshTokenRequest 클래스 — echo-server/src/main/java/com/echo/dto/RefreshTokenRequest.java 내 정의.",
+      "tags": [
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/dto/TokenResponse.java",
+      "type": "file",
+      "name": "TokenResponse.java",
+      "filePath": "echo-server/src/main/java/com/echo/dto/TokenResponse.java",
+      "summary": "echo-server/src/main/java/com/echo/dto/TokenResponse.java — code 파일.",
+      "tags": [
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/dto/TokenResponse.java:TokenResponse",
+      "type": "class",
+      "name": "TokenResponse",
+      "filePath": "echo-server/src/main/java/com/echo/dto/TokenResponse.java",
+      "summary": "TokenResponse 클래스 — echo-server/src/main/java/com/echo/dto/TokenResponse.java 내 정의.",
+      "tags": [
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/dto/TokenResponse.java:of",
+      "type": "function",
+      "name": "of",
+      "filePath": "echo-server/src/main/java/com/echo/dto/TokenResponse.java",
+      "summary": "of 함수.",
+      "tags": [
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/dto/UserResponse.java",
+      "type": "file",
+      "name": "UserResponse.java",
+      "filePath": "echo-server/src/main/java/com/echo/dto/UserResponse.java",
+      "summary": "echo-server/src/main/java/com/echo/dto/UserResponse.java — code 파일.",
+      "tags": [
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/dto/UserResponse.java:UserResponse",
+      "type": "class",
+      "name": "UserResponse",
+      "filePath": "echo-server/src/main/java/com/echo/dto/UserResponse.java",
+      "summary": "UserResponse 클래스 — echo-server/src/main/java/com/echo/dto/UserResponse.java 내 정의.",
+      "tags": [
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/dto/UserResponse.java:from",
+      "type": "function",
+      "name": "from",
+      "filePath": "echo-server/src/main/java/com/echo/dto/UserResponse.java",
+      "summary": "from 함수.",
+      "tags": [
+        "serialization",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "type": "file",
+      "name": "UserPrincipal.java",
+      "filePath": "echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "summary": "echo-server/src/main/java/com/echo/security/UserPrincipal.java — code 파일.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/security/UserPrincipal.java:UserPrincipal",
+      "type": "class",
+      "name": "UserPrincipal",
+      "filePath": "echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "summary": "UserPrincipal 클래스 — echo-server/src/main/java/com/echo/security/UserPrincipal.java 내 정의.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:UserPrincipal",
+      "type": "function",
+      "name": "UserPrincipal",
+      "filePath": "echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "summary": "UserPrincipal 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:getAuthorities",
+      "type": "function",
+      "name": "getAuthorities",
+      "filePath": "echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "summary": "getAuthorities 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:getPassword",
+      "type": "function",
+      "name": "getPassword",
+      "filePath": "echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "summary": "getPassword 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:getUsername",
+      "type": "function",
+      "name": "getUsername",
+      "filePath": "echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "summary": "getUsername 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:isAccountNonExpired",
+      "type": "function",
+      "name": "isAccountNonExpired",
+      "filePath": "echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "summary": "isAccountNonExpired 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:isAccountNonLocked",
+      "type": "function",
+      "name": "isAccountNonLocked",
+      "filePath": "echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "summary": "isAccountNonLocked 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:isCredentialsNonExpired",
+      "type": "function",
+      "name": "isCredentialsNonExpired",
+      "filePath": "echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "summary": "isCredentialsNonExpired 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:isEnabled",
+      "type": "function",
+      "name": "isEnabled",
+      "filePath": "echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "summary": "isEnabled 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/service/AuthService.java",
+      "type": "file",
+      "name": "AuthService.java",
+      "filePath": "echo-server/src/main/java/com/echo/service/AuthService.java",
+      "summary": "refresh token 검증 및 access/refresh 토큰 재발급 비즈니스 로직.",
+      "tags": [
+        "service",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/service/AuthService.java:AuthService",
+      "type": "class",
+      "name": "AuthService",
+      "filePath": "echo-server/src/main/java/com/echo/service/AuthService.java",
+      "summary": "AuthService 클래스 — echo-server/src/main/java/com/echo/service/AuthService.java 내 정의.",
+      "tags": [
+        "service",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/service/AuthService.java:refreshTokens",
+      "type": "function",
+      "name": "refreshTokens",
+      "filePath": "echo-server/src/main/java/com/echo/service/AuthService.java",
+      "summary": "refreshTokens 함수.",
+      "tags": [
+        "service",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-web/app/auth/callback/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "echo-web/app/auth/callback/page.tsx",
+      "summary": "OAuth 콜백 — URL 쿼리의 token을 저장하고 홈으로 이동.",
+      "tags": [
+        "component",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:echo-web/app/auth/callback/page.tsx:AuthCallbackContent",
+      "type": "function",
+      "name": "AuthCallbackContent",
+      "filePath": "echo-web/app/auth/callback/page.tsx",
+      "summary": "AuthCallbackContent 함수.",
+      "tags": [
+        "component",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-web/app/auth/callback/page.tsx:AuthCallbackPage",
+      "type": "function",
+      "name": "AuthCallbackPage",
+      "filePath": "echo-web/app/auth/callback/page.tsx",
+      "summary": "AuthCallbackPage 함수.",
+      "tags": [
+        "component",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-web/app/login/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "echo-web/app/login/page.tsx",
+      "summary": "Google/Naver OAuth 로그인 버튼 페이지.",
+      "tags": [
+        "component",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-web/app/login/page.tsx:LoginPage",
+      "type": "function",
+      "name": "LoginPage",
+      "filePath": "echo-web/app/login/page.tsx",
+      "summary": "LoginPage 함수.",
+      "tags": [
+        "component",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-web/app/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "echo-web/app/page.tsx",
+      "summary": "echo-web/app/page.tsx — code 파일.",
+      "tags": [
+        "component",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-web/app/page.tsx:Home",
+      "type": "function",
+      "name": "Home",
+      "filePath": "echo-web/app/page.tsx",
+      "summary": "Home 함수.",
+      "tags": [
+        "component",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-web/components/HomeAuth.tsx",
+      "type": "file",
+      "name": "HomeAuth.tsx",
+      "filePath": "echo-web/components/HomeAuth.tsx",
+      "summary": "홈 화면 인증 UI — 로그인 상태 표시, 사용자 정보, 채팅/로그아웃 링크.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:echo-web/components/HomeAuth.tsx:HomeAuth",
+      "type": "function",
+      "name": "HomeAuth",
+      "filePath": "echo-web/components/HomeAuth.tsx",
+      "summary": "HomeAuth 함수.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:echo-web/lib/auth.ts",
+      "type": "file",
+      "name": "auth.ts",
+      "filePath": "echo-web/lib/auth.ts",
+      "summary": "프론트엔드 인증 유틸 — 토큰 localStorage 관리, OAuth URL, /api/auth/me 호출.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:echo-web/lib/auth.ts:getAccessToken",
+      "type": "function",
+      "name": "getAccessToken",
+      "filePath": "echo-web/lib/auth.ts",
+      "summary": "getAccessToken 함수.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-web/lib/auth.ts:setTokens",
+      "type": "function",
+      "name": "setTokens",
+      "filePath": "echo-web/lib/auth.ts",
+      "summary": "setTokens 함수.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-web/lib/auth.ts:clearTokens",
+      "type": "function",
+      "name": "clearTokens",
+      "filePath": "echo-web/lib/auth.ts",
+      "summary": "clearTokens 함수.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-web/lib/auth.ts:getOAuthLoginUrl",
+      "type": "function",
+      "name": "getOAuthLoginUrl",
+      "filePath": "echo-web/lib/auth.ts",
+      "summary": "getOAuthLoginUrl 함수.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-web/lib/auth.ts:fetchCurrentUser",
+      "type": "function",
+      "name": "fetchCurrentUser",
+      "filePath": "echo-web/lib/auth.ts",
+      "summary": "fetchCurrentUser 함수.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/domain/AuthProvider.java",
+      "type": "file",
+      "name": "AuthProvider.java",
+      "filePath": "echo-server/src/main/java/com/echo/domain/AuthProvider.java",
+      "summary": "echo-server/src/main/java/com/echo/domain/AuthProvider.java — code 파일.",
+      "tags": [
+        "data-model",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/domain/AuthProvider.java:AuthProvider",
+      "type": "class",
+      "name": "AuthProvider",
+      "filePath": "echo-server/src/main/java/com/echo/domain/AuthProvider.java",
+      "summary": "AuthProvider 클래스 — echo-server/src/main/java/com/echo/domain/AuthProvider.java 내 정의.",
+      "tags": [
+        "data-model",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/domain/AuthProvider.java:fromRegistrationId",
+      "type": "function",
+      "name": "fromRegistrationId",
+      "filePath": "echo-server/src/main/java/com/echo/domain/AuthProvider.java",
+      "summary": "fromRegistrationId 함수.",
+      "tags": [
+        "data-model",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/repository/UserRepository.java",
+      "type": "file",
+      "name": "UserRepository.java",
+      "filePath": "echo-server/src/main/java/com/echo/repository/UserRepository.java",
+      "summary": "User 엔티티 Spring Data JPA 리포지토리.",
+      "tags": [
+        "data-model",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/repository/UserRepository.java:UserRepository",
+      "type": "class",
+      "name": "UserRepository",
+      "filePath": "echo-server/src/main/java/com/echo/repository/UserRepository.java",
+      "summary": "UserRepository 클래스 — echo-server/src/main/java/com/echo/repository/UserRepository.java 내 정의.",
+      "tags": [
+        "data-model",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java",
+      "type": "file",
+      "name": "JwtAuthenticationFilter.java",
+      "filePath": "echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java",
+      "summary": "요청 헤더의 Bearer JWT를 검증하고 SecurityContext에 인증 정보를 설정한다.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java:JwtAuthenticationFilter",
+      "type": "class",
+      "name": "JwtAuthenticationFilter",
+      "filePath": "echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java",
+      "summary": "JwtAuthenticationFilter 클래스 — echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java 내 정의.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java:doFilterInternal",
+      "type": "function",
+      "name": "doFilterInternal",
+      "filePath": "echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java",
+      "summary": "doFilterInternal 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "type": "file",
+      "name": "UserService.java",
+      "filePath": "echo-server/src/main/java/com/echo/service/UserService.java",
+      "summary": "OAuth 사용자 upsert, 로컬 사용자 생성, UserPrincipal 로딩.",
+      "tags": [
+        "service",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/service/UserService.java:UserService",
+      "type": "class",
+      "name": "UserService",
+      "filePath": "echo-server/src/main/java/com/echo/service/UserService.java",
+      "summary": "UserService 클래스 — echo-server/src/main/java/com/echo/service/UserService.java 내 정의.",
+      "tags": [
+        "service",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/service/UserService.java:upsertOAuthUser",
+      "type": "function",
+      "name": "upsertOAuthUser",
+      "filePath": "echo-server/src/main/java/com/echo/service/UserService.java",
+      "summary": "upsertOAuthUser 함수.",
+      "tags": [
+        "service",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/service/UserService.java:getUser",
+      "type": "function",
+      "name": "getUser",
+      "filePath": "echo-server/src/main/java/com/echo/service/UserService.java",
+      "summary": "getUser 함수.",
+      "tags": [
+        "service",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/service/UserService.java:resolveProviderId",
+      "type": "function",
+      "name": "resolveProviderId",
+      "filePath": "echo-server/src/main/java/com/echo/service/UserService.java",
+      "summary": "resolveProviderId 함수.",
+      "tags": [
+        "service",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/service/UserService.java:resolveDisplayName",
+      "type": "function",
+      "name": "resolveDisplayName",
+      "filePath": "echo-server/src/main/java/com/echo/service/UserService.java",
+      "summary": "resolveDisplayName 함수.",
+      "tags": [
+        "service",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "type": "file",
+      "name": "SecurityConfig.java",
+      "filePath": "echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "summary": "Spring Security 설정 — JWT 필터, OAuth2 로그인(Google/Naver), CORS, stateless API 보호.",
+      "tags": [
+        "configuration",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/config/SecurityConfig.java:SecurityConfig",
+      "type": "class",
+      "name": "SecurityConfig",
+      "filePath": "echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "summary": "SecurityConfig 클래스 — echo-server/src/main/java/com/echo/config/SecurityConfig.java 내 정의.",
+      "tags": [
+        "configuration",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/config/SecurityConfig.java:securityFilterChain",
+      "type": "function",
+      "name": "securityFilterChain",
+      "filePath": "echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "summary": "securityFilterChain 함수.",
+      "tags": [
+        "configuration",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/config/SecurityConfig.java:corsConfigurationSource",
+      "type": "function",
+      "name": "corsConfigurationSource",
+      "filePath": "echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "summary": "corsConfigurationSource 함수.",
+      "tags": [
+        "configuration",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java",
+      "type": "file",
+      "name": "CustomOAuth2UserService.java",
+      "filePath": "echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java",
+      "summary": "echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java — code 파일.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java:CustomOAuth2UserService",
+      "type": "class",
+      "name": "CustomOAuth2UserService",
+      "filePath": "echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java",
+      "summary": "CustomOAuth2UserService 클래스 — echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java 내 정의.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java:loadUser",
+      "type": "function",
+      "name": "loadUser",
+      "filePath": "echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java",
+      "summary": "loadUser 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java",
+      "type": "file",
+      "name": "OAuth2AuthenticationFailureHandler.java",
+      "filePath": "echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java",
+      "summary": "echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java — code 파일.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java:OAuth2AuthenticationFailureHandler",
+      "type": "class",
+      "name": "OAuth2AuthenticationFailureHandler",
+      "filePath": "echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java",
+      "summary": "OAuth2AuthenticationFailureHandler 클래스 — echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java 내 정의.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java:onAuthenticationFailure",
+      "type": "function",
+      "name": "onAuthenticationFailure",
+      "filePath": "echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java",
+      "summary": "onAuthenticationFailure 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "type": "file",
+      "name": "User.java",
+      "filePath": "echo-server/src/main/java/com/echo/domain/User.java",
+      "summary": "JPA User 엔티티 — email, displayName, OAuth provider, passwordHash.",
+      "tags": [
+        "data-model",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/domain/User.java:User",
+      "type": "class",
+      "name": "User",
+      "filePath": "echo-server/src/main/java/com/echo/domain/User.java",
+      "summary": "User 클래스 — echo-server/src/main/java/com/echo/domain/User.java 내 정의.",
+      "tags": [
+        "data-model",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/domain/User.java:User",
+      "type": "function",
+      "name": "User",
+      "filePath": "echo-server/src/main/java/com/echo/domain/User.java",
+      "summary": "User 함수.",
+      "tags": [
+        "data-model",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/domain/User.java:updateOAuthProfile",
+      "type": "function",
+      "name": "updateOAuthProfile",
+      "filePath": "echo-server/src/main/java/com/echo/domain/User.java",
+      "summary": "updateOAuthProfile 함수.",
+      "tags": [
+        "data-model",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "type": "file",
+      "name": "JwtTokenProvider.java",
+      "filePath": "echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "summary": "JWT access/refresh 토큰 생성·검증 및 사용자 ID 추출.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:JwtTokenProvider",
+      "type": "class",
+      "name": "JwtTokenProvider",
+      "filePath": "echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "summary": "JwtTokenProvider 클래스 — echo-server/src/main/java/com/echo/security/JwtTokenProvider.java 내 정의.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:JwtTokenProvider",
+      "type": "function",
+      "name": "JwtTokenProvider",
+      "filePath": "echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "summary": "JwtTokenProvider 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:createAccessToken",
+      "type": "function",
+      "name": "createAccessToken",
+      "filePath": "echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "summary": "createAccessToken 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:createRefreshToken",
+      "type": "function",
+      "name": "createRefreshToken",
+      "filePath": "echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "summary": "createRefreshToken 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:validateAccessToken",
+      "type": "function",
+      "name": "validateAccessToken",
+      "filePath": "echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "summary": "validateAccessToken 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:validateRefreshToken",
+      "type": "function",
+      "name": "validateRefreshToken",
+      "filePath": "echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "summary": "validateRefreshToken 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:getUserId",
+      "type": "function",
+      "name": "getUserId",
+      "filePath": "echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "summary": "getUserId 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:createToken",
+      "type": "function",
+      "name": "createToken",
+      "filePath": "echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "summary": "createToken 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+      "type": "file",
+      "name": "OAuth2AuthenticationSuccessHandler.java",
+      "filePath": "echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+      "summary": "OAuth2 로그인 성공 시 JWT 발급 후 프론트엔드 /auth/callback 으로 리다이렉트.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java:OAuth2AuthenticationSuccessHandler",
+      "type": "class",
+      "name": "OAuth2AuthenticationSuccessHandler",
+      "filePath": "echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+      "summary": "OAuth2AuthenticationSuccessHandler 클래스 — echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java 내 정의.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java:onAuthenticationSuccess",
+      "type": "function",
+      "name": "onAuthenticationSuccess",
+      "filePath": "echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+      "summary": "onAuthenticationSuccess 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:echo-server/src/main/resources/db/migration/V1__create_users.sql:users",
+      "type": "table",
+      "name": "V1__create_users.sql",
+      "filePath": "echo-server/src/main/resources/db/migration/V1__create_users.sql",
+      "summary": "Flyway 마이그레이션 — users 테이블 생성.",
+      "tags": [
+        "database",
+        "migration",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.env.example",
+      "type": "config",
+      "name": ".env.example",
+      "filePath": ".env.example",
+      "summary": ".env.example — config 파일.",
+      "tags": [
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Echo 메신저 프로젝트 개요, 기술 스택(Spring Boot + Next.js), MVP 범위, 로컬 개발 가이드.",
+      "tags": [
+        "documentation",
+        "entry-point",
+        "docs"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "service:docker-compose.yml",
+      "type": "service",
+      "name": "docker-compose.yml",
+      "filePath": "docker-compose.yml",
+      "summary": "로컬 PostgreSQL 15 컨테이너 정의(echo DB).",
+      "tags": [
+        "infrastructure",
+        "orchestration",
+        "infra"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:echo-web/.env.local.example",
+      "type": "config",
+      "name": ".env.local.example",
+      "filePath": "echo-web/.env.local.example",
+      "summary": "echo-web/.env.local.example — config 파일.",
+      "tags": [
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:echo-web/AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "echo-web/AGENTS.md",
+      "summary": "echo-web/AGENTS.md — docs 파일.",
+      "tags": [
+        "docs"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:echo-web/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "echo-web/CLAUDE.md",
+      "summary": "echo-web/CLAUDE.md — docs 파일.",
+      "tags": [
+        "docs"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:echo-web/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "echo-web/README.md",
+      "summary": "echo-web/README.md — docs 파일.",
+      "tags": [
+        "docs"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:echo-web/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "echo-web/package.json",
+      "summary": "echo-web/package.json — config 파일.",
+      "tags": [
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:echo-web/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "echo-web/tsconfig.json",
+      "summary": "echo-web/tsconfig.json — config 파일.",
+      "tags": [
+        "configuration",
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:.understand-anything/.understandignore",
+      "type": "file",
+      "name": ".understandignore",
+      "filePath": ".understand-anything/.understandignore",
+      "summary": ".understand-anything/.understandignore — code 파일.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:.understand-anything/config.json",
+      "type": "config",
+      "name": "config.json",
+      "filePath": ".understand-anything/config.json",
+      "summary": ".understand-anything/config.json — config 파일.",
+      "tags": [
+        "configuration",
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/.gitattributes",
+      "type": "file",
+      "name": ".gitattributes",
+      "filePath": "echo-server/.gitattributes",
+      "summary": "echo-server/.gitattributes — code 파일.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:echo-server/.mvn/wrapper/maven-wrapper.properties",
+      "type": "config",
+      "name": "maven-wrapper.properties",
+      "filePath": "echo-server/.mvn/wrapper/maven-wrapper.properties",
+      "summary": "echo-server/.mvn/wrapper/maven-wrapper.properties — config 파일.",
+      "tags": [
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/mvnw",
+      "type": "file",
+      "name": "mvnw",
+      "filePath": "echo-server/mvnw",
+      "summary": "echo-server/mvnw — code 파일.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:echo-server/mvnw.cmd",
+      "type": "file",
+      "name": "mvnw.cmd",
+      "filePath": "echo-server/mvnw.cmd",
+      "summary": "echo-server/mvnw.cmd — script 파일.",
+      "tags": [
+        "script"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:echo-server/pom.xml",
+      "type": "config",
+      "name": "pom.xml",
+      "filePath": "echo-server/pom.xml",
+      "summary": "echo-server/pom.xml — config 파일.",
+      "tags": [
+        "config"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/controller/HealthController.java",
+      "type": "file",
+      "name": "HealthController.java",
+      "filePath": "echo-server/src/main/java/com/echo/controller/HealthController.java",
+      "summary": "헬스 체크 엔드포인트 GET /api/health.",
+      "tags": [
+        "api-handler",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/controller/HealthController.java:HealthController",
+      "type": "class",
+      "name": "HealthController",
+      "filePath": "echo-server/src/main/java/com/echo/controller/HealthController.java",
+      "summary": "HealthController 클래스 — echo-server/src/main/java/com/echo/controller/HealthController.java 내 정의.",
+      "tags": [
+        "api-handler",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/controller/HealthController.java:health",
+      "type": "function",
+      "name": "health",
+      "filePath": "echo-server/src/main/java/com/echo/controller/HealthController.java",
+      "summary": "health 함수.",
+      "tags": [
+        "api-handler",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/domain/package-info.java",
+      "type": "file",
+      "name": "package-info.java",
+      "filePath": "echo-server/src/main/java/com/echo/domain/package-info.java",
+      "summary": "echo-server/src/main/java/com/echo/domain/package-info.java — code 파일.",
+      "tags": [
+        "data-model",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/EchoApplication.java",
+      "type": "file",
+      "name": "EchoApplication.java",
+      "filePath": "echo-server/src/main/java/com/echo/EchoApplication.java",
+      "summary": "Spring Boot 애플리케이션 진입점. echo-server 백엔드를 부트스트랩한다.",
+      "tags": [
+        "entry-point",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/EchoApplication.java:EchoApplication",
+      "type": "class",
+      "name": "EchoApplication",
+      "filePath": "echo-server/src/main/java/com/echo/EchoApplication.java",
+      "summary": "EchoApplication 클래스 — echo-server/src/main/java/com/echo/EchoApplication.java 내 정의.",
+      "tags": [
+        "entry-point",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/EchoApplication.java:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "echo-server/src/main/java/com/echo/EchoApplication.java",
+      "summary": "main 함수.",
+      "tags": [
+        "entry-point",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/repository/package-info.java",
+      "type": "file",
+      "name": "package-info.java",
+      "filePath": "echo-server/src/main/java/com/echo/repository/package-info.java",
+      "summary": "echo-server/src/main/java/com/echo/repository/package-info.java — code 파일.",
+      "tags": [
+        "data-model",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java",
+      "type": "file",
+      "name": "NaverOAuth2UserService.java",
+      "filePath": "echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java",
+      "summary": "echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java — code 파일.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java:NaverOAuth2UserService",
+      "type": "class",
+      "name": "NaverOAuth2UserService",
+      "filePath": "echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java",
+      "summary": "NaverOAuth2UserService 클래스 — echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java 내 정의.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java:loadUser",
+      "type": "function",
+      "name": "loadUser",
+      "filePath": "echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java",
+      "summary": "loadUser 함수.",
+      "tags": [
+        "security",
+        "middleware",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/service/package-info.java",
+      "type": "file",
+      "name": "package-info.java",
+      "filePath": "echo-server/src/main/java/com/echo/service/package-info.java",
+      "summary": "echo-server/src/main/java/com/echo/service/package-info.java — code 파일.",
+      "tags": [
+        "service",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/main/java/com/echo/websocket/package-info.java",
+      "type": "file",
+      "name": "package-info.java",
+      "filePath": "echo-server/src/main/java/com/echo/websocket/package-info.java",
+      "summary": "echo-server/src/main/java/com/echo/websocket/package-info.java — code 파일.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:echo-server/src/main/resources/application.yml",
+      "type": "config",
+      "name": "application.yml",
+      "filePath": "echo-server/src/main/resources/application.yml",
+      "summary": "Spring Boot 설정 — PostgreSQL, JWT, OAuth2 클라이언트, 프론트엔드 URL.",
+      "tags": [
+        "config"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:echo-server/src/test/java/com/echo/EchoApplicationTests.java",
+      "type": "file",
+      "name": "EchoApplicationTests.java",
+      "filePath": "echo-server/src/test/java/com/echo/EchoApplicationTests.java",
+      "summary": "echo-server/src/test/java/com/echo/EchoApplicationTests.java — code 파일.",
+      "tags": [
+        "test",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:echo-server/src/test/resources/application-test.yml",
+      "type": "config",
+      "name": "application-test.yml",
+      "filePath": "echo-server/src/test/resources/application-test.yml",
+      "summary": "echo-server/src/test/resources/application-test.yml — config 파일.",
+      "tags": [
+        "test",
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-server/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker",
+      "type": "file",
+      "name": "org.mockito.plugins.MockMaker",
+      "filePath": "echo-server/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker",
+      "summary": "echo-server/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker — code 파일.",
+      "tags": [
+        "test",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-web/app/chat/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "echo-web/app/chat/page.tsx",
+      "summary": "채팅 페이지 스켈레톤 — STOMP 연동 예정.",
+      "tags": [
+        "component",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-web/app/chat/page.tsx:ChatPage",
+      "type": "function",
+      "name": "ChatPage",
+      "filePath": "echo-web/app/chat/page.tsx",
+      "summary": "ChatPage 함수.",
+      "tags": [
+        "component",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-web/app/globals.css",
+      "type": "file",
+      "name": "globals.css",
+      "filePath": "echo-web/app/globals.css",
+      "summary": "echo-web/app/globals.css — markup 파일.",
+      "tags": [
+        "component",
+        "markup"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-web/app/layout.tsx",
+      "type": "file",
+      "name": "layout.tsx",
+      "filePath": "echo-web/app/layout.tsx",
+      "summary": "echo-web/app/layout.tsx — code 파일.",
+      "tags": [
+        "component",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:echo-web/app/layout.tsx:RootLayout",
+      "type": "function",
+      "name": "RootLayout",
+      "filePath": "echo-web/app/layout.tsx",
+      "summary": "RootLayout 함수.",
+      "tags": [
+        "component",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-web/components/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "echo-web/components/index.ts",
+      "summary": "echo-web/components/index.ts — code 파일.",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-web/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "echo-web/eslint.config.mjs",
+      "summary": "echo-web/eslint.config.mjs — code 파일.",
+      "tags": [
+        "configuration",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-web/lib/stomp.ts",
+      "type": "file",
+      "name": "stomp.ts",
+      "filePath": "echo-web/lib/stomp.ts",
+      "summary": "STOMP WebSocket 클라이언트 설정 스텁(향후 실시간 채팅용).",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-web/next.config.ts",
+      "type": "file",
+      "name": "next.config.ts",
+      "filePath": "echo-web/next.config.ts",
+      "summary": "echo-web/next.config.ts — code 파일.",
+      "tags": [
+        "configuration",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:echo-web/postcss.config.mjs",
+      "type": "file",
+      "name": "postcss.config.mjs",
+      "filePath": "echo-web/postcss.config.mjs",
+      "summary": "echo-web/postcss.config.mjs — code 파일.",
+      "tags": [
+        "configuration",
+        "utility"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "target": "file:echo-server/src/main/java/com/echo/dto/RefreshTokenRequest.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "target": "file:echo-server/src/main/java/com/echo/dto/TokenResponse.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "target": "file:echo-server/src/main/java/com/echo/dto/UserResponse.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "target": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "target": "file:echo-server/src/main/java/com/echo/service/AuthService.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "target": "class:echo-server/src/main/java/com/echo/controller/AuthController.java:AuthController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "target": "class:echo-server/src/main/java/com/echo/controller/AuthController.java:AuthController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "target": "function:echo-server/src/main/java/com/echo/controller/AuthController.java:me",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "target": "function:echo-server/src/main/java/com/echo/controller/AuthController.java:me",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "target": "function:echo-server/src/main/java/com/echo/controller/AuthController.java:refresh",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+      "target": "function:echo-server/src/main/java/com/echo/controller/AuthController.java:refresh",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/dto/RefreshTokenRequest.java",
+      "target": "class:echo-server/src/main/java/com/echo/dto/RefreshTokenRequest.java:RefreshTokenRequest",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/dto/RefreshTokenRequest.java",
+      "target": "class:echo-server/src/main/java/com/echo/dto/RefreshTokenRequest.java:RefreshTokenRequest",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/dto/TokenResponse.java",
+      "target": "class:echo-server/src/main/java/com/echo/dto/TokenResponse.java:TokenResponse",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/dto/TokenResponse.java",
+      "target": "class:echo-server/src/main/java/com/echo/dto/TokenResponse.java:TokenResponse",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/dto/TokenResponse.java",
+      "target": "function:echo-server/src/main/java/com/echo/dto/TokenResponse.java:of",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/dto/TokenResponse.java",
+      "target": "function:echo-server/src/main/java/com/echo/dto/TokenResponse.java:of",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/dto/UserResponse.java",
+      "target": "file:echo-server/src/main/java/com/echo/domain/AuthProvider.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/dto/UserResponse.java",
+      "target": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/dto/UserResponse.java",
+      "target": "class:echo-server/src/main/java/com/echo/dto/UserResponse.java:UserResponse",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/dto/UserResponse.java",
+      "target": "class:echo-server/src/main/java/com/echo/dto/UserResponse.java:UserResponse",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/dto/UserResponse.java",
+      "target": "function:echo-server/src/main/java/com/echo/dto/UserResponse.java:from",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/dto/UserResponse.java",
+      "target": "function:echo-server/src/main/java/com/echo/dto/UserResponse.java:from",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/UserPrincipal.java:UserPrincipal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/UserPrincipal.java:UserPrincipal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:UserPrincipal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:UserPrincipal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:getAuthorities",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:getAuthorities",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:getPassword",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:getPassword",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:getUsername",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:getUsername",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:isAccountNonExpired",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:isAccountNonExpired",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:isAccountNonLocked",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:isAccountNonLocked",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:isCredentialsNonExpired",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:isCredentialsNonExpired",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:isEnabled",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/UserPrincipal.java:isEnabled",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/AuthService.java",
+      "target": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/AuthService.java",
+      "target": "file:echo-server/src/main/java/com/echo/dto/TokenResponse.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/AuthService.java",
+      "target": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/AuthService.java",
+      "target": "class:echo-server/src/main/java/com/echo/service/AuthService.java:AuthService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/AuthService.java",
+      "target": "class:echo-server/src/main/java/com/echo/service/AuthService.java:AuthService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/AuthService.java",
+      "target": "function:echo-server/src/main/java/com/echo/service/AuthService.java:refreshTokens",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/AuthService.java",
+      "target": "function:echo-server/src/main/java/com/echo/service/AuthService.java:refreshTokens",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-web/app/auth/callback/page.tsx",
+      "target": "file:echo-web/lib/auth.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-web/app/auth/callback/page.tsx",
+      "target": "function:echo-web/app/auth/callback/page.tsx:AuthCallbackContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-web/app/auth/callback/page.tsx",
+      "target": "function:echo-web/app/auth/callback/page.tsx:AuthCallbackPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-web/app/auth/callback/page.tsx",
+      "target": "function:echo-web/app/auth/callback/page.tsx:AuthCallbackPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-web/app/login/page.tsx",
+      "target": "file:echo-web/lib/auth.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-web/app/login/page.tsx",
+      "target": "function:echo-web/app/login/page.tsx:LoginPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-web/app/login/page.tsx",
+      "target": "function:echo-web/app/login/page.tsx:LoginPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-web/app/page.tsx",
+      "target": "file:echo-web/components/HomeAuth.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-web/app/page.tsx",
+      "target": "function:echo-web/app/page.tsx:Home",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-web/app/page.tsx",
+      "target": "function:echo-web/app/page.tsx:Home",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-web/components/HomeAuth.tsx",
+      "target": "file:echo-web/lib/auth.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-web/components/HomeAuth.tsx",
+      "target": "function:echo-web/components/HomeAuth.tsx:HomeAuth",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-web/components/HomeAuth.tsx",
+      "target": "function:echo-web/components/HomeAuth.tsx:HomeAuth",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-web/lib/auth.ts",
+      "target": "function:echo-web/lib/auth.ts:getAccessToken",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-web/lib/auth.ts",
+      "target": "function:echo-web/lib/auth.ts:getAccessToken",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-web/lib/auth.ts",
+      "target": "function:echo-web/lib/auth.ts:setTokens",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-web/lib/auth.ts",
+      "target": "function:echo-web/lib/auth.ts:setTokens",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-web/lib/auth.ts",
+      "target": "function:echo-web/lib/auth.ts:clearTokens",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-web/lib/auth.ts",
+      "target": "function:echo-web/lib/auth.ts:clearTokens",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-web/lib/auth.ts",
+      "target": "function:echo-web/lib/auth.ts:getOAuthLoginUrl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-web/lib/auth.ts",
+      "target": "function:echo-web/lib/auth.ts:getOAuthLoginUrl",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-web/lib/auth.ts",
+      "target": "function:echo-web/lib/auth.ts:fetchCurrentUser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-web/lib/auth.ts",
+      "target": "function:echo-web/lib/auth.ts:fetchCurrentUser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/domain/AuthProvider.java",
+      "target": "class:echo-server/src/main/java/com/echo/domain/AuthProvider.java:AuthProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/domain/AuthProvider.java",
+      "target": "class:echo-server/src/main/java/com/echo/domain/AuthProvider.java:AuthProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/domain/AuthProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/domain/AuthProvider.java:fromRegistrationId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/domain/AuthProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/domain/AuthProvider.java:fromRegistrationId",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/repository/UserRepository.java",
+      "target": "file:echo-server/src/main/java/com/echo/domain/AuthProvider.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/repository/UserRepository.java",
+      "target": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/repository/UserRepository.java",
+      "target": "class:echo-server/src/main/java/com/echo/repository/UserRepository.java:UserRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/repository/UserRepository.java",
+      "target": "class:echo-server/src/main/java/com/echo/repository/UserRepository.java:UserRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java",
+      "target": "file:echo-server/src/main/java/com/echo/repository/UserRepository.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java:JwtAuthenticationFilter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java:JwtAuthenticationFilter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java:doFilterInternal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "target": "file:echo-server/src/main/java/com/echo/domain/AuthProvider.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "target": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "target": "file:echo-server/src/main/java/com/echo/repository/UserRepository.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "target": "class:echo-server/src/main/java/com/echo/service/UserService.java:UserService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "target": "class:echo-server/src/main/java/com/echo/service/UserService.java:UserService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "target": "function:echo-server/src/main/java/com/echo/service/UserService.java:upsertOAuthUser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "target": "function:echo-server/src/main/java/com/echo/service/UserService.java:upsertOAuthUser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "target": "function:echo-server/src/main/java/com/echo/service/UserService.java:getUser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "target": "function:echo-server/src/main/java/com/echo/service/UserService.java:getUser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "target": "function:echo-server/src/main/java/com/echo/service/UserService.java:resolveProviderId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "target": "function:echo-server/src/main/java/com/echo/service/UserService.java:resolveDisplayName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "target": "file:echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "target": "file:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "target": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "target": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "target": "class:echo-server/src/main/java/com/echo/config/SecurityConfig.java:SecurityConfig",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "target": "class:echo-server/src/main/java/com/echo/config/SecurityConfig.java:SecurityConfig",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "target": "function:echo-server/src/main/java/com/echo/config/SecurityConfig.java:securityFilterChain",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "target": "function:echo-server/src/main/java/com/echo/config/SecurityConfig.java:securityFilterChain",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "target": "function:echo-server/src/main/java/com/echo/config/SecurityConfig.java:corsConfigurationSource",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+      "target": "function:echo-server/src/main/java/com/echo/config/SecurityConfig.java:corsConfigurationSource",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java:CustomOAuth2UserService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java:CustomOAuth2UserService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java:loadUser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java:loadUser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java:OAuth2AuthenticationFailureHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java:OAuth2AuthenticationFailureHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java:onAuthenticationFailure",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java:onAuthenticationFailure",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "target": "class:echo-server/src/main/java/com/echo/domain/User.java:User",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "target": "class:echo-server/src/main/java/com/echo/domain/User.java:User",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "target": "function:echo-server/src/main/java/com/echo/domain/User.java:User",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "target": "function:echo-server/src/main/java/com/echo/domain/User.java:User",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "target": "function:echo-server/src/main/java/com/echo/domain/User.java:updateOAuthProfile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "target": "function:echo-server/src/main/java/com/echo/domain/User.java:updateOAuthProfile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:JwtTokenProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:JwtTokenProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:JwtTokenProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:JwtTokenProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:createAccessToken",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:createAccessToken",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:createRefreshToken",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:createRefreshToken",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:validateAccessToken",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:validateAccessToken",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:validateRefreshToken",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:validateRefreshToken",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:getUserId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:getUserId",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java:createToken",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+      "target": "file:echo-server/src/main/java/com/echo/domain/User.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+      "target": "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+      "target": "file:echo-server/src/main/java/com/echo/service/UserService.java",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java:OAuth2AuthenticationSuccessHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java:OAuth2AuthenticationSuccessHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java:onAuthenticationSuccess",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java:onAuthenticationSuccess",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/HealthController.java",
+      "target": "class:echo-server/src/main/java/com/echo/controller/HealthController.java:HealthController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/HealthController.java",
+      "target": "class:echo-server/src/main/java/com/echo/controller/HealthController.java:HealthController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/HealthController.java",
+      "target": "function:echo-server/src/main/java/com/echo/controller/HealthController.java:health",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/controller/HealthController.java",
+      "target": "function:echo-server/src/main/java/com/echo/controller/HealthController.java:health",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/EchoApplication.java",
+      "target": "class:echo-server/src/main/java/com/echo/EchoApplication.java:EchoApplication",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/EchoApplication.java",
+      "target": "class:echo-server/src/main/java/com/echo/EchoApplication.java:EchoApplication",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/EchoApplication.java",
+      "target": "function:echo-server/src/main/java/com/echo/EchoApplication.java:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/EchoApplication.java",
+      "target": "function:echo-server/src/main/java/com/echo/EchoApplication.java:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java:NaverOAuth2UserService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java",
+      "target": "class:echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java:NaverOAuth2UserService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java:loadUser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java",
+      "target": "function:echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java:loadUser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-web/app/chat/page.tsx",
+      "target": "function:echo-web/app/chat/page.tsx:ChatPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-web/app/chat/page.tsx",
+      "target": "function:echo-web/app/chat/page.tsx:ChatPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:echo-web/app/layout.tsx",
+      "target": "file:echo-web/app/globals.css",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:echo-web/app/layout.tsx",
+      "target": "function:echo-web/app/layout.tsx:RootLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:echo-web/app/layout.tsx",
+      "target": "function:echo-web/app/layout.tsx:RootLayout",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:frontend-ui",
+      "name": "프론트엔드 UI",
+      "description": "Next.js App Router 페이지 및 React 컴포넌트",
+      "nodeIds": [
+        "file:echo-web/app/auth/callback/page.tsx",
+        "file:echo-web/app/login/page.tsx",
+        "file:echo-web/app/page.tsx",
+        "file:echo-web/components/HomeAuth.tsx",
+        "file:echo-web/app/chat/page.tsx",
+        "file:echo-web/app/globals.css",
+        "file:echo-web/app/layout.tsx",
+        "file:echo-web/components/index.ts"
+      ]
+    },
+    {
+      "id": "layer:frontend-lib",
+      "name": "프론트엔드 라이브러리",
+      "description": "인증·STOMP 등 프론트엔드 공유 유틸",
+      "nodeIds": [
+        "file:echo-web/lib/auth.ts",
+        "file:echo-web/lib/stomp.ts"
+      ]
+    },
+    {
+      "id": "layer:api",
+      "name": "API 레이어",
+      "description": "REST 컨트롤러 및 DTO",
+      "nodeIds": [
+        "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+        "file:echo-server/src/main/java/com/echo/dto/RefreshTokenRequest.java",
+        "file:echo-server/src/main/java/com/echo/dto/TokenResponse.java",
+        "file:echo-server/src/main/java/com/echo/dto/UserResponse.java",
+        "file:echo-server/src/main/java/com/echo/controller/HealthController.java"
+      ]
+    },
+    {
+      "id": "layer:service",
+      "name": "서비스 레이어",
+      "description": "비즈니스 로직 서비스",
+      "nodeIds": [
+        "file:echo-server/src/main/java/com/echo/service/AuthService.java",
+        "file:echo-server/src/main/java/com/echo/service/UserService.java",
+        "file:echo-server/src/main/java/com/echo/service/package-info.java"
+      ]
+    },
+    {
+      "id": "layer:security",
+      "name": "보안 레이어",
+      "description": "JWT, OAuth2, Spring Security 설정",
+      "nodeIds": [
+        "file:echo-server/src/main/java/com/echo/security/UserPrincipal.java",
+        "file:echo-server/src/main/java/com/echo/security/JwtAuthenticationFilter.java",
+        "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+        "file:echo-server/src/main/java/com/echo/security/oauth/CustomOAuth2UserService.java",
+        "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationFailureHandler.java",
+        "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java",
+        "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+        "file:echo-server/src/main/java/com/echo/security/oauth/NaverOAuth2UserService.java"
+      ]
+    },
+    {
+      "id": "layer:data",
+      "name": "데이터 레이어",
+      "description": "JPA 엔티티, 리포지토리, DB 마이그레이션",
+      "nodeIds": [
+        "file:echo-server/src/main/java/com/echo/domain/AuthProvider.java",
+        "file:echo-server/src/main/java/com/echo/repository/UserRepository.java",
+        "file:echo-server/src/main/java/com/echo/domain/User.java",
+        "table:echo-server/src/main/resources/db/migration/V1__create_users.sql:users",
+        "file:echo-server/src/main/java/com/echo/domain/package-info.java",
+        "file:echo-server/src/main/java/com/echo/repository/package-info.java"
+      ]
+    },
+    {
+      "id": "layer:infrastructure",
+      "name": "인프라",
+      "description": "Docker, 환경 설정, 빌드 매니페스트",
+      "nodeIds": [
+        "config:.env.example",
+        "service:docker-compose.yml",
+        "config:echo-web/.env.local.example",
+        "config:echo-web/package.json",
+        "config:echo-web/tsconfig.json",
+        "config:.understand-anything/config.json",
+        "config:echo-server/.mvn/wrapper/maven-wrapper.properties",
+        "config:echo-server/pom.xml",
+        "config:echo-server/src/main/resources/application.yml"
+      ]
+    },
+    {
+      "id": "layer:documentation",
+      "name": "문서",
+      "description": "README 및 프로젝트 문서",
+      "nodeIds": [
+        "document:README.md",
+        "document:echo-web/AGENTS.md",
+        "document:echo-web/CLAUDE.md",
+        "document:echo-web/README.md"
+      ]
+    },
+    {
+      "id": "layer:entry-bootstrap",
+      "name": "부트스트랩",
+      "description": "애플리케이션 진입점 및 테스트",
+      "nodeIds": [
+        "file:echo-server/src/main/java/com/echo/EchoApplication.java",
+        "file:echo-server/src/test/java/com/echo/EchoApplicationTests.java",
+        "config:echo-server/src/test/resources/application-test.yml",
+        "file:echo-server/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker"
+      ]
+    },
+    {
+      "id": "layer:misc",
+      "name": "기타",
+      "description": "빌드 도구 및 기타 프로젝트 파일",
+      "nodeIds": [
+        "file:.understand-anything/.understandignore",
+        "file:echo-server/.gitattributes",
+        "file:echo-server/mvnw",
+        "file:echo-server/mvnw.cmd",
+        "file:echo-server/src/main/java/com/echo/websocket/package-info.java",
+        "file:echo-web/eslint.config.mjs",
+        "file:echo-web/next.config.ts",
+        "file:echo-web/postcss.config.mjs"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "프로젝트 개요",
+      "description": "README에서 Echo 메신저의 목표, MVP 범위, 기술 스택(Spring Boot + Next.js)을 확인합니다.",
+      "nodeIds": [
+        "document:README.md"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "로컬 인프라",
+      "description": "docker-compose로 PostgreSQL을 기동하고 application.yml에서 DB·OAuth 설정을 연결합니다.",
+      "nodeIds": [
+        "service:docker-compose.yml",
+        "config:echo-server/src/main/resources/application.yml"
+      ]
+    },
+    {
+      "order": 3,
+      "title": "백엔드 진입점",
+      "description": "EchoApplication이 Spring Boot echo-server를 부트스트랩합니다.",
+      "nodeIds": [
+        "file:echo-server/src/main/java/com/echo/EchoApplication.java"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "보안 및 OAuth",
+      "description": "SecurityConfig와 OAuth2 핸들러가 Google/Naver 로그인 후 JWT를 발급합니다.",
+      "nodeIds": [
+        "file:echo-server/src/main/java/com/echo/config/SecurityConfig.java",
+        "file:echo-server/src/main/java/com/echo/security/oauth/OAuth2AuthenticationSuccessHandler.java",
+        "file:echo-server/src/main/java/com/echo/security/JwtTokenProvider.java"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "인증 API",
+      "description": "AuthController와 AuthService가 /me, /refresh 엔드포인트를 제공합니다.",
+      "nodeIds": [
+        "file:echo-server/src/main/java/com/echo/controller/AuthController.java",
+        "file:echo-server/src/main/java/com/echo/service/AuthService.java"
+      ]
+    },
+    {
+      "order": 6,
+      "title": "사용자 데이터 모델",
+      "description": "User 엔티티, UserRepository, Flyway 마이그레이션이 사용자 정보를 영속화합니다.",
+      "nodeIds": [
+        "file:echo-server/src/main/java/com/echo/domain/User.java",
+        "file:echo-server/src/main/java/com/echo/repository/UserRepository.java",
+        "table:echo-server/src/main/resources/db/migration/V1__create_users.sql:users"
+      ]
+    },
+    {
+      "order": 7,
+      "title": "프론트엔드 인증 흐름",
+      "description": "로그인 페이지 → OAuth 콜백 → auth.ts 토큰 저장 → HomeAuth UI로 이어지는 클라이언트 인증 흐름입니다.",
+      "nodeIds": [
+        "file:echo-web/app/login/page.tsx",
+        "file:echo-web/app/auth/callback/page.tsx",
+        "file:echo-web/lib/auth.ts",
+        "file:echo-web/components/HomeAuth.tsx"
+      ]
+    },
+    {
+      "order": 8,
+      "title": "실시간 채팅(예정)",
+      "description": "chat 페이지와 stomp.ts가 STOMP WebSocket 실시간 메시징 연동을 위한 스켈레톤입니다.",
+      "nodeIds": [
+        "file:echo-web/app/chat/page.tsx",
+        "file:echo-web/lib/stomp.ts",
+        "file:echo-server/src/main/java/com/echo/websocket/package-info.java"
+      ],
+      "languageLesson": "STOMP는 WebSocket 위에서 메시지 브로커 패턴을 제공하는 프로토콜입니다. Spring의 @MessageMapping과 @stomp/stompjs 클라이언트가 Echo 실시간 채팅의 핵심이 됩니다."
+    }
+  ]
+}

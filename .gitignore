@@ -65,3 +65,10 @@ venv/
 *.ldf
 *.db
 *.sqlite
+
+# Understand-Anything (generated artifacts; keep knowledge-graph outputs)
+.understand-anything/intermediate/
+.understand-anything/tmp/
+.understand-anything/.trash-*/
+.understand-anything/fingerprints.json
+.understand-anything/diff-overlay.json

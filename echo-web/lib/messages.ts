@@ -1,0 +1,81 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+
+export type Message = {
+  id: number;
+  roomId: number;
+  senderId: number;
+  senderDisplayName: string;
+  content: string;
+  createdAt: string;
+};
+
+export type MessageHistory = {
+  messages: Message[];
+  hasMore: boolean;
+};
+
+/**
+ * 인증 헤더를 구성한다.
+ */
+function authHeaders(token: string): HeadersInit {
+  return {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+}
+
+/**
+ * 채팅방 메시지 히스토리를 조회한다.
+ */
+export async function fetchMessages(
+  token: string,
+  roomId: number,
+  options?: { before?: number; limit?: number },
+): Promise<MessageHistory | null> {
+  const params = new URLSearchParams();
+
+  if (options?.before != null) {
+    params.set("before", String(options.before));
+  }
+
+  if (options?.limit != null) {
+    params.set("limit", String(options.limit));
+  }
+
+  const query = params.toString();
+  const response = await fetch(
+    `${API_URL}/api/rooms/${roomId}/messages${query ? `?${query}` : ""}`,
+    {
+      headers: authHeaders(token),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return response.json() as Promise<MessageHistory>;
+}
+
+/**
+ * 채팅방에 메시지를 전송한다.
+ */
+export async function sendMessage(
+  token: string,
+  roomId: number,
+  content: string,
+): Promise<Message | null> {
+  const response = await fetch(`${API_URL}/api/rooms/${roomId}/messages`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ content }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return response.json() as Promise<Message>;
+}

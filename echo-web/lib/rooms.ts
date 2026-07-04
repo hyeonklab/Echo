@@ -45,6 +45,22 @@ export async function fetchRooms(token: string): Promise<Room[]> {
 }
 
 /**
+ * 채팅방 상세 정보를 조회한다.
+ */
+export async function fetchRoom(token: string, roomId: number): Promise<Room | null> {
+  const response = await fetch(`${API_URL}/api/rooms/${roomId}`, {
+    headers: authHeaders(token),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return response.json() as Promise<Room>;
+}
+
+/**
  * 그룹 채팅방을 생성한다.
  */
 export async function createGroupRoom(

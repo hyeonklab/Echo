@@ -341,7 +341,12 @@ export default function ChatRoomList() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="font-medium text-zinc-900 dark:text-zinc-100">{room.name}</p>
+                    <Link
+                      href={`/chat/${room.id}`}
+                      className="font-medium text-zinc-900 transition hover:text-zinc-600 dark:text-zinc-100 dark:hover:text-zinc-300"
+                    >
+                      {room.name}
+                    </Link>
                     <p className="mt-1 text-xs text-zinc-500">
                       {room.type === "DM" ? "1:1 DM" : "그룹"} · ID {room.id}
                     </p>

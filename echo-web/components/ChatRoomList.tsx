@@ -17,6 +17,7 @@ import {
   getRoomDisplayName,
 } from "@/lib/rooms";
 import { SearchUser, getProviderLabel, searchUsers } from "@/lib/users";
+import { applyIncomingMessageToRooms, subscribeRoomMessageEvents } from "@/lib/room-live";
 
 /**
  * DM 생성 API 오류 메시지를 사용자 메시지로 변환한다.
@@ -67,6 +68,12 @@ export default function ChatRoomList() {
 
     loadRooms();
   }, [router]);
+
+  useEffect(() => {
+    return subscribeRoomMessageEvents((message) => {
+      setRooms((prev) => applyIncomingMessageToRooms(prev, message));
+    });
+  }, []);
 
   async function handleCreateGroup(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();

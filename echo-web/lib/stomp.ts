@@ -7,9 +7,15 @@ import type { Message } from "@/lib/messages";
 export type RoomMessageHandler = (message: Message) => void;
 
 /**
- * 채팅방 메시지 STOMP 구독을 시작한다.
+ * 여러 채팅방 메시지 STOMP 구독을 시작한다.
  */
-export function subscribeRoomMessages(roomId: number, onMessage: RoomMessageHandler): () => void {
+export function subscribeRoomsMessages(roomIds: number[], onMessage: RoomMessageHandler): () => void {
+  const uniqueRoomIds = [...new Set(roomIds)];
+
+  if (uniqueRoomIds.length === 0) {
+    return () => undefined;
+  }
+
   const accessToken = getAccessToken();
 
   if (!accessToken) {
@@ -23,11 +29,13 @@ export function subscribeRoomMessages(roomId: number, onMessage: RoomMessageHand
     },
     reconnectDelay: 5000,
     onConnect: () => {
-      client.subscribe(`/topic/rooms/${roomId}/messages`, (frame: IMessage) => {
-        const message = JSON.parse(frame.body) as Message;
+      for (const roomId of uniqueRoomIds) {
+        client.subscribe(`/topic/rooms/${roomId}/messages`, (frame: IMessage) => {
+          const message = JSON.parse(frame.body) as Message;
 
-        onMessage(message);
-      });
+          onMessage(message);
+        });
+      }
     },
   });
 
@@ -36,4 +44,11 @@ export function subscribeRoomMessages(roomId: number, onMessage: RoomMessageHand
   return () => {
     void client.deactivate();
   };
+}
+
+/**
+ * 채팅방 메시지 STOMP 구독을 시작한다.
+ */
+export function subscribeRoomMessages(roomId: number, onMessage: RoomMessageHandler): () => void {
+  return subscribeRoomsMessages([roomId], onMessage);
 }

@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import MessageNotificationListener from "@/components/MessageNotificationListener";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,6 +32,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <MessageNotificationListener />
         {children}
       </body>
     </html>

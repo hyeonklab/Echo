@@ -1,7 +1,7 @@
 package com.echo.service;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -56,9 +56,11 @@ public class MessageService {
 			messages = new ArrayList<>(messages.subList(0, pageSize));
 		}
 
-		List<MessageResponse> responses = messages.stream()
+		List<Message> ascendingMessages = new ArrayList<>(messages);
+		Collections.reverse(ascendingMessages);
+
+		List<MessageResponse> responses = ascendingMessages.stream()
 			.map(MessageResponse::from)
-			.sorted(Comparator.comparing(MessageResponse::createdAt))
 			.toList();
 
 		return new MessageHistoryResponse(responses, hasMore);

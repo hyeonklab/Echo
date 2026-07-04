@@ -53,7 +53,8 @@ public class SecurityConfig {
 					"/login/oauth2/**",
 					"/error",
 					"/api/auth/exchange",
-					"/api/auth/refresh"
+					"/api/auth/refresh",
+					"/api/auth/logout"
 				).permitAll()
 				.anyRequest().authenticated()
 			)

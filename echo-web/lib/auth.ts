@@ -41,6 +41,22 @@ export function clearTokens(): void {
 }
 
 /**
+ * 서버 OAuth 세션을 정리하고 localStorage 토큰을 제거한다.
+ */
+export async function logout(): Promise<void> {
+  try {
+    await fetch(`${API_URL}/api/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // 네트워크 오류 시에도 로컬 토큰은 제거한다.
+  }
+
+  clearTokens();
+}
+
+/**
  * OAuth 일회용 교환 코드를 JWT로 교환한다.
  */
 export async function exchangeAuthCode(code: string): Promise<{ accessToken: string; refreshToken: string } | null> {

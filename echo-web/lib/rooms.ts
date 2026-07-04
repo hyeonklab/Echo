@@ -25,6 +25,7 @@ export type Room = {
   createdAt: string;
   members: RoomMember[];
   lastMessage: LastMessagePreview | null;
+  unreadCount: number;
 };
 
 /**
@@ -331,6 +332,26 @@ export async function updateRoomName(
     room: (await response.json()) as Room,
     errorMessage: null,
   };
+}
+
+/**
+ * 채팅방 메시지를 읽음 처리한다.
+ */
+export async function markRoomRead(roomId: number, messageId: number): Promise<boolean> {
+  const token = await resolveAccessToken();
+
+  if (!token) {
+    return false;
+  }
+
+  const response = await apiFetch(`${getApiUrl()}/api/rooms/${roomId}/read`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ messageId }),
+    cache: "no-store",
+  });
+
+  return response.ok;
 }
 
 /**

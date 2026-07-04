@@ -17,7 +17,8 @@ public record RoomResponse(
 	Long createdByUserId,
 	Instant createdAt,
 	List<RoomMemberResponse> members,
-	LastMessagePreview lastMessage
+	LastMessagePreview lastMessage,
+	int unreadCount
 ) {
 
 	/**
@@ -27,7 +28,8 @@ public record RoomResponse(
 		Room room,
 		List<RoomMember> members,
 		Long viewerUserId,
-		LastMessagePreview lastMessage
+		LastMessagePreview lastMessage,
+		int unreadCount
 	) {
 		List<RoomMemberResponse> memberResponses = members.stream()
 			.map(member -> new RoomMemberResponse(
@@ -45,7 +47,8 @@ public record RoomResponse(
 			room.getCreatedBy().getId(),
 			room.getCreatedAt(),
 			memberResponses,
-			lastMessage
+			lastMessage,
+			unreadCount
 		);
 	}
 

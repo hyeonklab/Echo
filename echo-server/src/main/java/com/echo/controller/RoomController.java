@@ -18,9 +18,12 @@ import org.springframework.web.server.ResponseStatusException;
 import com.echo.dto.CreateDmRoomRequest;
 import com.echo.dto.CreateGroupRoomRequest;
 import com.echo.dto.InviteRoomMemberRequest;
+import com.echo.dto.MarkRoomReadRequest;
+import com.echo.dto.RoomReadResponse;
 import com.echo.dto.RoomResponse;
 import com.echo.dto.UpdateRoomNameRequest;
 import com.echo.security.UserPrincipal;
+import com.echo.service.RoomReadStateService;
 import com.echo.service.RoomService;
 
 import jakarta.validation.Valid;
@@ -35,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 public class RoomController {
 
 	private final RoomService roomService;
+	private final RoomReadStateService roomReadStateService;
 
 	/**
 	 * 내 채팅방 목록을 반환한다.
@@ -90,6 +94,18 @@ public class RoomController {
 	}
 
 	/**
+	 * 채팅방 메시지를 읽음 처리한다.
+	 */
+	@PostMapping("/{roomId}/read")
+	public RoomReadResponse markRoomAsRead(
+		@AuthenticationPrincipal UserPrincipal principal,
+		@PathVariable Long roomId,
+		@Valid @RequestBody MarkRoomReadRequest request
+	) {
+		return executeReadAction(() -> roomReadStateService.markAsRead(roomId, requireUserId(principal), request.messageId()));
+	}
+
+	/**
 	 * 채팅방 이름을 변경한다.
 	 */
 	@PatchMapping("/{roomId}/name")
@@ -122,6 +138,15 @@ public class RoomController {
 	}
 
 	private RoomResponse executeRoomAction(java.util.function.Supplier<RoomResponse> action) {
+		try {
+			return action.get();
+		}
+		catch (IllegalArgumentException ex) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+		}
+	}
+
+	private RoomReadResponse executeReadAction(java.util.function.Supplier<RoomReadResponse> action) {
 		try {
 			return action.get();
 		}

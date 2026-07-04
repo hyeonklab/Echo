@@ -2,7 +2,30 @@
  * 브라우저 알림 지원 여부를 반환한다.
  */
 export function isNotificationSupported(): boolean {
-  return globalThis.window !== undefined && "Notification" in globalThis;
+  return (
+    globalThis.window !== undefined
+    && globalThis.isSecureContext
+    && "Notification" in globalThis
+  );
+}
+
+/**
+ * 알림을 사용할 수 없는 이유를 반환한다.
+ */
+export function getNotificationUnavailableReason(): string | null {
+  if (globalThis.window === undefined) {
+    return null;
+  }
+
+  if (!globalThis.isSecureContext) {
+    return "HTTP 접속에서는 브라우저 알림을 사용할 수 없습니다. localhost 또는 HTTPS로 접속해 주세요.";
+  }
+
+  if (!("Notification" in globalThis)) {
+    return "이 브라우저는 알림을 지원하지 않습니다.";
+  }
+
+  return null;
 }
 
 /**

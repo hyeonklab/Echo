@@ -13,8 +13,8 @@ import {
   showMessageNotification,
 } from "@/lib/notifications";
 import { Room, fetchRooms, getRoomDisplayName } from "@/lib/rooms";
-import { publishRoomMessageEvent } from "@/lib/room-live";
-import { subscribeRoomsMessages } from "@/lib/stomp";
+import { publishRoomMessageEvent, publishRoomReadEvent, type RoomReadEvent } from "@/lib/room-live";
+import { subscribeRoomsMessages, subscribeRoomsReads } from "@/lib/stomp";
 
 /**
  * 로그인 사용자의 모든 채팅방 메시지를 구독하고 브라우저 알림을 표시한다.
@@ -114,9 +114,19 @@ export default function MessageNotificationListener() {
       });
     }
 
+    function handleIncomingRead(read: RoomReadEvent) {
+      publishRoomReadEvent(read);
+    }
+
     const roomIds = rooms.map((room) => room.id);
 
-    return subscribeRoomsMessages(roomIds, handleIncomingMessage);
+    const unsubscribeMessages = subscribeRoomsMessages(roomIds, handleIncomingMessage);
+    const unsubscribeReads = subscribeRoomsReads(roomIds, handleIncomingRead);
+
+    return () => {
+      unsubscribeMessages();
+      unsubscribeReads();
+    };
   }, [currentUser, enabled, rooms, router]);
 
   return null;

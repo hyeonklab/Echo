@@ -30,4 +30,28 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 		""")
 	List<Message> findLatestMessagesByRoomIds(@Param("roomIds") Collection<Long> roomIds);
 
+	@Query("""
+		SELECT COUNT(m) FROM Message m
+		WHERE m.room.id = :roomId
+		AND m.sender.id <> :userId
+		AND m.id > :afterMessageId
+		""")
+	long countUnreadAfter(
+		@Param("roomId") Long roomId,
+		@Param("userId") Long userId,
+		@Param("afterMessageId") Long afterMessageId
+	);
+
+	@Query(value = """
+		SELECT m.room_id, COUNT(*)::bigint
+		FROM messages m
+		LEFT JOIN room_read_states rrs
+			ON rrs.room_id = m.room_id AND rrs.user_id = :userId
+		WHERE m.room_id IN (:roomIds)
+			AND m.sender_id <> :userId
+			AND m.id > COALESCE(rrs.last_read_message_id, 0)
+		GROUP BY m.room_id
+		""", nativeQuery = true)
+	List<Object[]> countUnreadByRoomIds(@Param("userId") Long userId, @Param("roomIds") Collection<Long> roomIds);
+
 }

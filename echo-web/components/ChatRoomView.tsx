@@ -5,9 +5,10 @@ import { type SubmitEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AuthUser, fetchSessionUser } from "@/lib/auth";
-import { Message, fetchMessages, sendMessage } from "@/lib/messages";
-import { Room, canInviteToRoom, canRenameRoom, fetchRoom, formatRoomMemberSummary, getRoomDisplayName, inviteRoomMember, updateRoomName } from "@/lib/rooms";
-import { subscribeRoomMessages } from "@/lib/stomp";
+import { Message, fetchMessages, sendMessage, type MemberReadState } from "@/lib/messages";
+import { formatUnreadCount, publishRoomReadEvent } from "@/lib/room-live";
+import { Room, canInviteToRoom, canRenameRoom, fetchRoom, formatRoomMemberSummary, getRoomDisplayName, inviteRoomMember, markRoomRead, updateRoomName } from "@/lib/rooms";
+import { subscribeRoomMessages, subscribeRoomRead } from "@/lib/stomp";
 import { SearchUser, getProviderLabel, searchUsers } from "@/lib/users";
 
 type ChatRoomViewProps = {
@@ -76,12 +77,68 @@ function formatMessageTime(value: string): string {
 }
 
 /**
+ * 내가 보낸 마지막 메시지의 미읽음 인원 수를 반환한다.
+ */
+function getOwnMessageUnreadCount(
+  message: Message,
+  messages: Message[],
+  room: Room,
+  currentUserId: number,
+  peerLastReadMessageId: number | null,
+  memberReadStates: MemberReadState[],
+): string | null {
+  if (message.senderId !== currentUserId || room.type === "SELF") {
+    return null;
+  }
+
+  const ownMessages = messages.filter((item) => item.senderId === currentUserId);
+
+  if (ownMessages.length === 0) {
+    return null;
+  }
+
+  const lastOwnMessage = ownMessages[ownMessages.length - 1];
+
+  if (message.id !== lastOwnMessage.id) {
+    return null;
+  }
+
+  if (room.type === "DM") {
+    if (peerLastReadMessageId == null || lastOwnMessage.id > peerLastReadMessageId) {
+      return "1";
+    }
+
+    return null;
+  }
+
+  const otherMembers = room.members.filter((member) => member.userId !== currentUserId);
+
+  if (otherMembers.length === 0) {
+    return null;
+  }
+
+  const unreadCount = otherMembers.filter((member) => {
+    const readState = memberReadStates.find((item) => item.userId === member.userId);
+    const lastReadMessageId = readState?.lastReadMessageId ?? 0;
+
+    return lastReadMessageId < lastOwnMessage.id;
+  }).length;
+
+  if (unreadCount === 0) {
+    return null;
+  }
+
+  return formatUnreadCount(unreadCount);
+}
+
+/**
  * 채팅방 메시지 목록 및 입력 UI.
  */
 export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
+  const lastMarkedMessageIdRef = useRef<number | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -100,6 +157,12 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   const [inviteSearching, setInviteSearching] = useState(false);
   const [inviteSubmitting, setInviteSubmitting] = useState(false);
   const [inviteErrorMessage, setInviteErrorMessage] = useState<string | null>(null);
+  const [peerLastReadMessageId, setPeerLastReadMessageId] = useState<number | null>(null);
+  const [memberReadStates, setMemberReadStates] = useState<MemberReadState[]>([]);
+
+  useEffect(() => {
+    lastMarkedMessageIdRef.current = null;
+  }, [roomId]);
 
   useEffect(() => {
     async function loadChatRoom() {
@@ -125,6 +188,8 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
       setCurrentUser(user);
       setMessages(history.messages);
       setHasMore(history.hasMore);
+      setPeerLastReadMessageId(history.peerLastReadMessageId);
+      setMemberReadStates(history.memberReadStates ?? []);
       setLoading(false);
     }
 
@@ -140,6 +205,59 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
       setMessages((prev) => appendMessage(prev, message));
     });
   }, [roomId, loading]);
+
+  useEffect(() => {
+    if (loading || !currentUser || messages.length === 0) {
+      return;
+    }
+
+    const latestMessage = messages[messages.length - 1];
+
+    if (lastMarkedMessageIdRef.current === latestMessage.id) {
+      return;
+    }
+
+    lastMarkedMessageIdRef.current = latestMessage.id;
+
+    void markRoomRead(roomId, latestMessage.id).then((success) => {
+      if (!success) {
+        return;
+      }
+
+      publishRoomReadEvent({
+        roomId,
+        userId: currentUser.id,
+        lastReadMessageId: latestMessage.id,
+      });
+    });
+  }, [currentUser, loading, messages, roomId]);
+
+  useEffect(() => {
+    if (loading || !currentUser) {
+      return;
+    }
+
+    return subscribeRoomRead(roomId, (read) => {
+      if (read.userId === currentUser.id) {
+        return;
+      }
+
+      setPeerLastReadMessageId(read.lastReadMessageId);
+      setMemberReadStates((prev) => {
+        const exists = prev.some((item) => item.userId === read.userId);
+
+        if (exists) {
+          return prev.map((item) =>
+            item.userId === read.userId
+              ? { ...item, lastReadMessageId: read.lastReadMessageId }
+              : item,
+          );
+        }
+
+        return [...prev, { userId: read.userId, lastReadMessageId: read.lastReadMessageId }];
+      });
+    });
+  }, [currentUser, loading, roomId]);
 
   function focusMessageInput() {
     messageInputRef.current?.focus({ preventScroll: true });
@@ -497,9 +615,22 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
           ) : (
             messages.map((message) => {
               const isMine = message.senderId === currentUser.id;
+              const unreadCountLabel = getOwnMessageUnreadCount(
+                message,
+                messages,
+                room,
+                currentUser.id,
+                peerLastReadMessageId,
+                memberReadStates,
+              );
 
               return (
-                <div key={message.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+                <div key={message.id} className={`flex items-end gap-1.5 ${isMine ? "justify-end" : "justify-start"}`}>
+                  {isMine && unreadCountLabel ? (
+                    <span className="pb-1 text-xs font-semibold text-sky-400 dark:text-sky-500">
+                      {unreadCountLabel}
+                    </span>
+                  ) : null}
                   <div
                     className={`max-w-[80%] rounded-2xl px-3 py-2 ${
                       isMine

@@ -2,6 +2,18 @@ import type { Message } from "@/lib/messages";
 import type { LastMessagePreview, Room } from "@/lib/rooms";
 
 export const ROOM_MESSAGE_EVENT = "echo:room-message";
+export const ROOM_READ_EVENT = "echo:room-read";
+
+export type RoomReadEvent = {
+  roomId: number;
+  userId: number;
+  lastReadMessageId: number;
+};
+
+type ApplyIncomingMessageOptions = {
+  currentUserId?: number;
+  viewingRoomId?: number | null;
+};
 
 /**
  * 채팅방 활동 시각을 반환한다.
@@ -22,7 +34,11 @@ export function sortRoomsByLastActivity(rooms: Room[]): Room[] {
 /**
  * 수신 메시지로 채팅방 목록의 미리보기를 갱신한다.
  */
-export function applyIncomingMessageToRooms(rooms: Room[], message: Message): Room[] {
+export function applyIncomingMessageToRooms(
+  rooms: Room[],
+  message: Message,
+  options: ApplyIncomingMessageOptions = {},
+): Room[] {
   const targetRoom = rooms.find((room) => room.id === message.roomId);
 
   if (!targetRoom) {
@@ -36,13 +52,10 @@ export function applyIncomingMessageToRooms(rooms: Room[], message: Message): Ro
     createdAt: message.createdAt,
   };
 
-  if (
-    targetRoom.lastMessage?.createdAt === lastMessage.createdAt
-    && targetRoom.lastMessage.content === lastMessage.content
-    && targetRoom.lastMessage.senderId === lastMessage.senderId
-  ) {
-    return rooms;
-  }
+  const shouldIncreaseUnread =
+    options.currentUserId != null
+    && message.senderId !== options.currentUserId
+    && options.viewingRoomId !== message.roomId;
 
   const updated = rooms.map((room) => {
     if (room.id !== message.roomId) {
@@ -52,10 +65,35 @@ export function applyIncomingMessageToRooms(rooms: Room[], message: Message): Ro
     return {
       ...room,
       lastMessage,
+      unreadCount: shouldIncreaseUnread ? room.unreadCount + 1 : room.unreadCount,
     };
   });
 
   return sortRoomsByLastActivity(updated);
+}
+
+/**
+ * 읽음 처리로 채팅방 목록의 미읽음 수를 갱신한다.
+ */
+export function applyRoomReadToRooms(
+  rooms: Room[],
+  read: RoomReadEvent,
+  currentUserId: number,
+): Room[] {
+  if (read.userId !== currentUserId) {
+    return rooms;
+  }
+
+  return rooms.map((room) => {
+    if (room.id !== read.roomId) {
+      return room;
+    }
+
+    return {
+      ...room,
+      unreadCount: 0,
+    };
+  });
 }
 
 /**
@@ -72,6 +110,19 @@ export function publishRoomMessageEvent(message: Message): void {
 }
 
 /**
+ * 채팅방 읽음 이벤트를 발행한다.
+ */
+export function publishRoomReadEvent(read: RoomReadEvent): void {
+  if (globalThis.window === undefined) {
+    return;
+  }
+
+  globalThis.window.dispatchEvent(
+    new CustomEvent<RoomReadEvent>(ROOM_READ_EVENT, { detail: read }),
+  );
+}
+
+/**
  * 채팅방 메시지 수신 이벤트를 구독한다.
  */
 export function subscribeRoomMessageEvents(handler: (message: Message) => void): () => void {
@@ -84,4 +135,49 @@ export function subscribeRoomMessageEvents(handler: (message: Message) => void):
   return () => {
     globalThis.window.removeEventListener(ROOM_MESSAGE_EVENT, onRoomMessage);
   };
+}
+
+/**
+ * 채팅방 읽음 이벤트를 구독한다.
+ */
+export function subscribeRoomReadEvents(handler: (read: RoomReadEvent) => void): () => void {
+  function onRoomRead(event: Event) {
+    handler((event as CustomEvent<RoomReadEvent>).detail);
+  }
+
+  globalThis.window.addEventListener(ROOM_READ_EVENT, onRoomRead);
+
+  return () => {
+    globalThis.window.removeEventListener(ROOM_READ_EVENT, onRoomRead);
+  };
+}
+
+/**
+ * 현재 경로에서 보고 있는 채팅방 ID를 반환한다.
+ */
+export function getViewingRoomId(pathname: string): number | null {
+  const match = pathname.match(/^\/chat\/(\d+)$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const roomId = Number(match[1]);
+
+  if (!Number.isInteger(roomId) || roomId <= 0) {
+    return null;
+  }
+
+  return roomId;
+}
+
+/**
+ * 미읽음 배지 표시 문구를 반환한다.
+ */
+export function formatUnreadCount(count: number): string {
+  if (count > 99) {
+    return "99+";
+  }
+
+  return String(count);
 }

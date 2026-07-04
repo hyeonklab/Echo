@@ -36,6 +36,7 @@ public class RoomService {
 	private final RoomRepository roomRepository;
 	private final RoomMemberRepository roomMemberRepository;
 	private final MessageRepository messageRepository;
+	private final RoomReadStateService roomReadStateService;
 	private final UserService userService;
 
 	/**
@@ -52,9 +53,15 @@ public class RoomService {
 		List<Long> roomIds = rooms.stream().map(Room::getId).toList();
 		Map<Long, Message> lastMessagesByRoomId = messageRepository.findLatestMessagesByRoomIds(roomIds).stream()
 			.collect(Collectors.toMap(message -> message.getRoom().getId(), message -> message));
+		Map<Long, Integer> unreadCountsByRoomId = roomReadStateService.countUnreadByRoomIds(userId, roomIds);
 
 		return rooms.stream()
-			.map(room -> toRoomResponse(room, userId, lastMessagesByRoomId.get(room.getId())))
+			.map(room -> toRoomResponse(
+				room,
+				userId,
+				lastMessagesByRoomId.get(room.getId()),
+				unreadCountsByRoomId.getOrDefault(room.getId(), 0)
+			))
 			.sorted((left, right) -> compareByLastActivity(right, left))
 			.toList();
 	}
@@ -231,14 +238,18 @@ public class RoomService {
 	}
 
 	private RoomResponse toRoomResponse(Room room, Long viewerUserId) {
-		return toRoomResponse(room, viewerUserId, findLastMessage(room.getId()));
+		return toRoomResponse(room, viewerUserId, findLastMessage(room.getId()), roomReadStateService.countUnread(room.getId(), viewerUserId));
 	}
 
 	private RoomResponse toRoomResponse(Room room, Long viewerUserId, Message lastMessage) {
+		return toRoomResponse(room, viewerUserId, lastMessage, roomReadStateService.countUnread(room.getId(), viewerUserId));
+	}
+
+	private RoomResponse toRoomResponse(Room room, Long viewerUserId, Message lastMessage, int unreadCount) {
 		List<RoomMember> members = roomMemberRepository.findAllByRoom_IdOrderByJoinedAtAsc(room.getId());
 		LastMessagePreview lastMessagePreview = lastMessage == null ? null : LastMessagePreview.from(lastMessage);
 
-		return RoomResponse.from(room, members, viewerUserId, lastMessagePreview);
+		return RoomResponse.from(room, members, viewerUserId, lastMessagePreview, unreadCount);
 	}
 
 	private Message findLastMessage(Long roomId) {

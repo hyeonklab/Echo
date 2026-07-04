@@ -10,9 +10,16 @@ export type Message = {
   createdAt: string;
 };
 
+export type MemberReadState = {
+  userId: number;
+  lastReadMessageId: number | null;
+};
+
 export type MessageHistory = {
   messages: Message[];
   hasMore: boolean;
+  peerLastReadMessageId: number | null;
+  memberReadStates: MemberReadState[];
 };
 
 /**

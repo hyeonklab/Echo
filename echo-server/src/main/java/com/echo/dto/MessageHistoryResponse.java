@@ -7,6 +7,8 @@ import java.util.List;
  */
 public record MessageHistoryResponse(
 	List<MessageResponse> messages,
-	boolean hasMore
+	boolean hasMore,
+	Long peerLastReadMessageId,
+	List<MemberReadStateResponse> memberReadStates
 ) {
 }

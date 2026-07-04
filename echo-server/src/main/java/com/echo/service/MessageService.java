@@ -15,6 +15,7 @@ import com.echo.domain.Room;
 import com.echo.domain.User;
 import com.echo.dto.MessageHistoryResponse;
 import com.echo.dto.MessageResponse;
+import com.echo.dto.MemberReadStateResponse;
 import com.echo.dto.SendMessageRequest;
 import com.echo.repository.MessageRepository;
 import com.echo.repository.RoomMemberRepository;
@@ -37,6 +38,7 @@ public class MessageService {
 	private final RoomMemberRepository roomMemberRepository;
 	private final UserService userService;
 	private final MessageBroadcastService messageBroadcastService;
+	private final RoomReadStateService roomReadStateService;
 
 	/**
 	 * 채팅방 메시지 히스토리를 반환한다.
@@ -64,7 +66,10 @@ public class MessageService {
 			.map(MessageResponse::from)
 			.toList();
 
-		return new MessageHistoryResponse(responses, hasMore);
+		Long peerLastReadMessageId = roomReadStateService.getPeerLastReadMessageId(roomId, userId);
+		List<MemberReadStateResponse> memberReadStates = roomReadStateService.getMemberReadStates(roomId, userId);
+
+		return new MessageHistoryResponse(responses, hasMore, peerLastReadMessageId, memberReadStates);
 	}
 
 	/**
@@ -82,6 +87,7 @@ public class MessageService {
 		Message message = messageRepository.save(Objects.requireNonNull(newMessage));
 		MessageResponse response = MessageResponse.from(message);
 
+		roomReadStateService.markAsRead(roomId, userId, message.getId());
 		messageBroadcastService.broadcastMessage(response);
 
 		return response;

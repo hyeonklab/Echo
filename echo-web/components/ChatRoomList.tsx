@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { type SubmitEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { AuthUser, fetchSessionUser } from "@/lib/auth";
 import {
@@ -17,7 +17,9 @@ import {
   getRoomDisplayName,
 } from "@/lib/rooms";
 import { SearchUser, getProviderLabel, searchUsers } from "@/lib/users";
-import { applyIncomingMessageToRooms, subscribeRoomMessageEvents } from "@/lib/room-live";
+import { addFriend, fetchFriends, resolveAddFriendErrorMessage } from "@/lib/friends";
+import { applyIncomingMessageToRooms, applyRoomReadToRooms, formatUnreadCount, getViewingRoomId, subscribeRoomMessageEvents, subscribeRoomReadEvents } from "@/lib/room-live";
+import { getNotificationUnavailableReason } from "@/lib/notifications";
 
 /**
  * DM 생성 API 오류 메시지를 사용자 메시지로 변환한다.
@@ -39,6 +41,7 @@ function resolveDmErrorMessage(errorMessage: string | null): string {
  */
 export default function ChatRoomList() {
   const router = useRouter();
+  const pathname = usePathname();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +52,8 @@ export default function ChatRoomList() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pendingDeleteRoom, setPendingDeleteRoom] = useState<Room | null>(null);
+  const [friendIds, setFriendIds] = useState<Set<number>>(new Set());
+  const notificationGuide = getNotificationUnavailableReason();
 
   useEffect(() => {
     async function loadRooms() {
@@ -60,9 +65,11 @@ export default function ChatRoomList() {
       }
 
       const roomList = await fetchRooms();
+      const friendList = await fetchFriends();
 
       setCurrentUser(user);
       setRooms(roomList);
+      setFriendIds(new Set(friendList.map((friend) => friend.id)));
       setLoading(false);
     }
 
@@ -70,10 +77,27 @@ export default function ChatRoomList() {
   }, [router]);
 
   useEffect(() => {
+    const viewingRoomId = getViewingRoomId(pathname);
+
     return subscribeRoomMessageEvents((message) => {
-      setRooms((prev) => applyIncomingMessageToRooms(prev, message));
+      setRooms((prev) =>
+        applyIncomingMessageToRooms(prev, message, {
+          currentUserId: currentUser?.id,
+          viewingRoomId,
+        }),
+      );
     });
-  }, []);
+  }, [currentUser?.id, pathname]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    return subscribeRoomReadEvents((read) => {
+      setRooms((prev) => applyRoomReadToRooms(prev, read, currentUser.id));
+    });
+  }, [currentUser]);
 
   async function handleCreateGroup(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -158,6 +182,27 @@ export default function ChatRoomList() {
     setRooms((prev) => [room, ...prev.filter((item) => item.id !== room.id)]);
     setSubmitting(false);
     router.push(`/chat/${room.id}`);
+  }
+
+  async function handleAddFriend(targetUser: SearchUser) {
+    if (friendIds.has(targetUser.id)) {
+      setErrorMessage("이미 친구로 등록된 사용자입니다.");
+      return;
+    }
+
+    setSubmitting(true);
+    setErrorMessage(null);
+
+    const { friend, errorMessage } = await addFriend(targetUser.id);
+
+    if (!friend) {
+      setErrorMessage(resolveAddFriendErrorMessage(errorMessage));
+      setSubmitting(false);
+      return;
+    }
+
+    setFriendIds((prev) => new Set([...prev, friend.id]));
+    setSubmitting(false);
   }
 
   async function confirmDeleteRoom() {
@@ -248,6 +293,12 @@ export default function ChatRoomList() {
         </div>
       ) : null}
 
+      {notificationGuide ? (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+          {notificationGuide}
+        </p>
+      ) : null}
+
       {errorMessage ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
           {errorMessage}
@@ -309,14 +360,24 @@ export default function ChatRoomList() {
                     {user.email ?? "이메일 없음"} · {getProviderLabel(user.provider)}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleStartDm(user)}
-                  disabled={submitting}
-                  className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                >
-                  대화 시작
-                </button>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleAddFriend(user)}
+                    disabled={submitting || friendIds.has(user.id)}
+                    className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  >
+                    {friendIds.has(user.id) ? "친구" : "친구 추가"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStartDm(user)}
+                    disabled={submitting}
+                    className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  >
+                    대화 시작
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -367,7 +428,12 @@ export default function ChatRoomList() {
                       {currentUser ? formatLastMessagePreview(room, currentUser.id) : "메시지가 없습니다."}
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center">
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    {room.unreadCount > 0 ? (
+                      <span className="min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[11px] font-semibold text-white">
+                        {formatUnreadCount(room.unreadCount ?? 0)}
+                      </span>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => openDeleteConfirm(room)}
@@ -384,12 +450,20 @@ export default function ChatRoomList() {
         )}
       </section>
 
-      <Link
-        href="/"
-        className="inline-flex items-center justify-center rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
-      >
-        홈으로
-      </Link>
+      <div className="flex flex-wrap gap-3">
+        <Link
+          href="/friends"
+          className="inline-flex items-center justify-center rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          친구 목록
+        </Link>
+        <Link
+          href="/"
+          className="inline-flex items-center justify-center rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          홈으로
+        </Link>
+      </div>
     </div>
   );
 }

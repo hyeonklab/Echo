@@ -8,6 +8,7 @@ Desktop.ini
 .env.*
 !.env.example
 !.env.local.example
+!.env.docker.example
 *.local
 
 # IDE

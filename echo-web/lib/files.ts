@@ -1,5 +1,7 @@
 import { ensureAccessToken, normalizeAuthUser, type AuthUser } from "@/lib/auth";
-import { apiFetch, getApiUrl } from "@/lib/api";
+import { apiFetch, FILE_UPLOAD_TIMEOUT_MS, getApiUrl } from "@/lib/api";
+
+const FILE_FETCH_TIMEOUT_MS = FILE_UPLOAD_TIMEOUT_MS;
 
 export type FilePurpose = "AVATAR" | "MESSAGE";
 
@@ -20,16 +22,53 @@ export function getFileUrl(fileId: number, download = false): string {
 }
 
 /**
+ * 파일 업로드 API 오류 메시지를 반환한다.
+ */
+async function readUploadErrorMessage(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as {
+      message?: string;
+      detail?: string;
+      error?: string;
+    };
+
+    if (body.message) {
+      return body.message;
+    }
+
+    if (body.detail) {
+      return body.detail;
+    }
+
+    if (body.error) {
+      return body.error;
+    }
+  } catch {
+    // ignore parse errors
+  }
+
+  if (response.status === 413) {
+    return "파일 크기가 너무 큽니다.";
+  }
+
+  if (response.status === 401) {
+    return "로그인이 만료되었습니다. 다시 로그인해 주세요.";
+  }
+
+  return "이미지 업로드에 실패했습니다.";
+}
+
+/**
  * 이미지 파일을 업로드한다.
  */
 export async function uploadFiles(
   purpose: FilePurpose,
   files: File[],
-): Promise<UploadedFile[] | null> {
+): Promise<{ files: UploadedFile[] } | { errorMessage: string }> {
   const token = await ensureAccessToken();
 
   if (!token || files.length === 0) {
-    return null;
+    return { errorMessage: "이미지 업로드에 실패했습니다." };
   }
 
   const formData = new FormData();
@@ -40,22 +79,30 @@ export async function uploadFiles(
     formData.append("files", file);
   }
 
-  const response = await apiFetch(`${getApiUrl()}/api/files`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
-    cache: "no-store",
-  });
+  try {
+    const response = await apiFetch(
+      `${getApiUrl()}/api/files`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+        cache: "no-store",
+      },
+      FILE_UPLOAD_TIMEOUT_MS,
+    );
 
-  if (!response.ok) {
-    return null;
+    if (!response.ok) {
+      return { errorMessage: await readUploadErrorMessage(response) };
+    }
+
+    const payload = (await response.json()) as { files: UploadedFile[] };
+
+    return { files: payload.files };
+  } catch {
+    return { errorMessage: "이미지 업로드 중 네트워크 오류가 발생했습니다." };
   }
-
-  const payload = (await response.json()) as { files: UploadedFile[] };
-
-  return payload.files;
 }
 
 /**
@@ -71,18 +118,26 @@ export async function fetchAuthenticatedFileBlob(
     return null;
   }
 
-  const response = await apiFetch(getFileUrl(fileId, download), {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    cache: "no-store",
-  });
+  try {
+    const response = await apiFetch(
+      getFileUrl(fileId, download),
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      },
+      FILE_FETCH_TIMEOUT_MS,
+    );
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return null;
+    }
+
+    return response.blob();
+  } catch {
     return null;
   }
-
-  return response.blob();
 }
 
 /**
@@ -120,18 +175,22 @@ export async function uploadAvatar(file: File): Promise<AuthUser | null> {
 
   formData.set("file", file);
 
-  const response = await apiFetch(`${getApiUrl()}/api/users/me/avatar`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
-    cache: "no-store",
-  });
+  try {
+    const response = await apiFetch(`${getApiUrl()}/api/users/me/avatar`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+      cache: "no-store",
+    }, FILE_UPLOAD_TIMEOUT_MS);
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return null;
+    }
+
+    return normalizeAuthUser((await response.json()) as AuthUser);
+  } catch {
     return null;
   }
-
-  return normalizeAuthUser((await response.json()) as AuthUser);
 }

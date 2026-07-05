@@ -72,4 +72,4 @@ echo:
     root-path: ${ECHO_STORAGE_PATH:./data/uploads}
     max-file-size-mb: 10
     max-album-count: 30
-    allowed-content-types: image/jpeg,image/png,image/gif,image/webp
+    allowed-content-types: image/jpeg,image/jpg,image/png,image/gif,image/webp

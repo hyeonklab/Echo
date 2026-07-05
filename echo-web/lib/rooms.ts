@@ -39,7 +39,9 @@ export function formatLastMessagePreview(room: Room, currentUserId: number): str
   }
 
   const normalized = room.lastMessage.content.replace(/\s+/g, " ").trim();
-  const preview = normalized.length > 60 ? `${normalized.slice(0, 60)}...` : normalized;
+  const preview = normalized.length > 0
+    ? (normalized.length > 60 ? `${normalized.slice(0, 60)}...` : normalized)
+    : "사진";
 
   if (room.type === "GROUP") {
     const senderLabel =

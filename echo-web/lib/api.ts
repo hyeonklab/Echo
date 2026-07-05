@@ -1,5 +1,6 @@
 const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 const FETCH_TIMEOUT_MS = 8000;
+const FILE_UPLOAD_TIMEOUT_MS = 120000;
 
 /**
  * API base URL을 반환한다. DDNS 접속 시 브라우저 호스트 기준 8080을 사용한다.
@@ -26,9 +27,13 @@ export function getWsUrl(): string {
 /**
  * 타임아웃이 적용된 fetch를 실행한다.
  */
-export async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
+export async function apiFetch(
+  url: string,
+  init?: RequestInit,
+  timeoutMs: number = FETCH_TIMEOUT_MS,
+): Promise<Response> {
   const controller = new AbortController();
-  const timeoutId = globalThis.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     return await fetch(url, {
@@ -39,3 +44,5 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
     globalThis.clearTimeout(timeoutId);
   }
 }
+
+export { FILE_UPLOAD_TIMEOUT_MS };

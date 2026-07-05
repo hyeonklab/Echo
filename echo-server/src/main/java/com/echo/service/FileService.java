@@ -18,8 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import com.echo.config.StorageProperties;
 import com.echo.domain.FilePurpose;
 import com.echo.domain.StoredFile;
@@ -68,7 +66,9 @@ public class FileService {
 		List<FileResponse> responses = new ArrayList<>();
 
 		for (MultipartFile file : files) {
-			validateUploadFile(file, allowedTypes, maxBytes);
+			String contentType = resolveContentType(file, allowedTypes);
+
+			validateUploadFile(file, maxBytes);
 
 			String storageKey;
 			try (InputStream inputStream = file.getInputStream()) {
@@ -83,7 +83,7 @@ public class FileService {
 			StoredFile storedFile = StoredFile.builder()
 				.owner(owner)
 				.originalName(resolveOriginalName(file))
-				.contentType(Objects.requireNonNull(file.getContentType()))
+				.contentType(contentType)
 				.sizeBytes(file.getSize())
 				.storageKey(storageKey)
 				.purpose(purpose)
@@ -203,6 +203,14 @@ public class FileService {
 		storedFileRepository.delete(file);
 	}
 
+	/**
+	 * 저장 파일을 조회한다. 없으면 null을 반환한다.
+	 */
+	@Transactional(readOnly = true)
+	public StoredFile getStoredFileIfExists(Long fileId) {
+		return storedFileRepository.findById(Objects.requireNonNull(fileId)).orElse(null);
+	}
+
 	private boolean canAccessFile(Long userId, StoredFile file) {
 		if (file.getOwner().getId().equals(userId)) {
 			return true;
@@ -215,7 +223,7 @@ public class FileService {
 		return storedFileRepository.canAccessMessageFile(file.getId(), userId);
 	}
 
-	private void validateUploadFile(MultipartFile file, Set<String> allowedTypes, long maxBytes) {
+	private void validateUploadFile(MultipartFile file, long maxBytes) {
 		if (file == null || file.isEmpty()) {
 			throw new IllegalArgumentException("Empty file is not allowed");
 		}
@@ -223,12 +231,58 @@ public class FileService {
 		if (file.getSize() > maxBytes) {
 			throw new IllegalArgumentException("File is too large");
 		}
+	}
 
-		String contentType = file.getContentType();
+	private String resolveContentType(MultipartFile file, Set<String> allowedTypes) {
+		String fromHeader = normalizeContentType(file.getContentType());
 
-		if (contentType == null || !allowedTypes.contains(contentType.toLowerCase(Locale.ROOT))) {
-			throw new IllegalArgumentException("Unsupported file type");
+		if (fromHeader != null && allowedTypes.contains(fromHeader)) {
+			return fromHeader;
 		}
+
+		String fromExtension = resolveContentTypeFromFilename(file.getOriginalFilename());
+
+		if (fromExtension != null && allowedTypes.contains(fromExtension)) {
+			return fromExtension;
+		}
+
+		throw new IllegalArgumentException("Unsupported file type");
+	}
+
+	private String normalizeContentType(String contentType) {
+		if (contentType == null || contentType.isBlank()) {
+			return null;
+		}
+
+		String normalized = contentType.toLowerCase(Locale.ROOT).split(";")[0].trim();
+
+		if ("image/jpg".equals(normalized) || "image/pjpeg".equals(normalized)) {
+			return "image/jpeg";
+		}
+
+		return normalized;
+	}
+
+	private String resolveContentTypeFromFilename(String filename) {
+		if (filename == null || filename.isBlank()) {
+			return null;
+		}
+
+		int dotIndex = filename.lastIndexOf('.');
+
+		if (dotIndex < 0 || dotIndex == filename.length() - 1) {
+			return null;
+		}
+
+		String extension = filename.substring(dotIndex + 1).toLowerCase(Locale.ROOT);
+
+		return switch (extension) {
+			case "jpg", "jpeg" -> "image/jpeg";
+			case "png" -> "image/png";
+			case "gif" -> "image/gif";
+			case "webp" -> "image/webp";
+			default -> null;
+		};
 	}
 
 	private Set<String> resolveAllowedContentTypes() {

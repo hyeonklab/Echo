@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -17,6 +18,17 @@ import com.echo.domain.StoredFile;
 public interface MessageAttachmentRepository extends JpaRepository<MessageAttachment, Long> {
 
 	List<MessageAttachment> findByMessage_IdOrderBySortOrderAsc(Long messageId);
+
+	@Query("""
+		SELECT ma.file.id FROM MessageAttachment ma
+		WHERE ma.message.id = :messageId
+		ORDER BY ma.sortOrder ASC
+		""")
+	List<Long> findFileIdsByMessageId(@Param("messageId") Long messageId);
+
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query("DELETE FROM MessageAttachment ma WHERE ma.message.id = :messageId")
+	void deleteByMessageId(@Param("messageId") Long messageId);
 
 	@Query("""
 		SELECT ma FROM MessageAttachment ma

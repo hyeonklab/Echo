@@ -46,14 +46,41 @@ const MAX_ATTACHMENT_COUNT = 30;
 /**
  * 삭제 확인용 메시지 미리보기를 반환한다.
  */
-function formatDeletePreview(content: string, maxLength = 60): string {
-  const normalized = content.replace(/\s+/g, " ").trim();
+function formatDeletePreview(message: Message, maxLength = 60): string {
+  const normalized = message.content.replace(/\s+/g, " ").trim();
 
-  if (normalized.length <= maxLength) {
-    return normalized;
+  if (normalized.length > 0) {
+    if (normalized.length <= maxLength) {
+      return normalized;
+    }
+
+    return `${normalized.slice(0, maxLength)}...`;
   }
 
-  return `${normalized.slice(0, maxLength)}...`;
+  const attachmentCount = message.attachments?.length ?? 0;
+
+  if (attachmentCount > 0) {
+    return `사진 ${attachmentCount}장`;
+  }
+
+  return "메시지";
+}
+
+/**
+ * 첨부 가능한 이미지 파일인지 확인한다.
+ */
+function isAttachableImage(file: File): boolean {
+  if (file.type.startsWith("image/")) {
+    return true;
+  }
+
+  const extension = file.name.split(".").pop()?.toLowerCase();
+
+  return extension === "jpg"
+    || extension === "jpeg"
+    || extension === "png"
+    || extension === "gif"
+    || extension === "webp";
 }
 
 /**
@@ -206,14 +233,6 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   const [deletingMessageId, setDeletingMessageId] = useState<number | null>(null);
 
   useEffect(() => {
-    return () => {
-      for (const attachment of pendingAttachments) {
-        URL.revokeObjectURL(attachment.previewUrl);
-      }
-    };
-  }, [pendingAttachments]);
-
-  useEffect(() => {
     lastMarkedMessageIdRef.current = null;
     setPendingAttachments((prev) => {
       for (const attachment of prev) {
@@ -277,6 +296,13 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
 
     return subscribeRoomMessageDeletes(roomId, (deleted) => {
       setMessages((prev) => removeMessage(prev, deleted.messageId));
+      setPendingDeleteMessage((pending) =>
+        pending?.message.id === deleted.messageId ? null : pending,
+      );
+      setDeletingMessageId((current) => (current === deleted.messageId ? null : current));
+      setErrorMessage((current) =>
+        current === "메시지 삭제에 실패했습니다." ? null : current,
+      );
       publishRoomMessageDeletedEvent(deleted);
     });
   }, [roomId, loading]);
@@ -571,34 +597,36 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     }
 
     const { message: targetMessage, scope } = pendingDeleteMessage;
+    const targetId = targetMessage.id;
 
-    setDeletingMessageId(targetMessage.id);
+    setPendingDeleteMessage(null);
+    setDeletingMessageId(targetId);
     setErrorMessage(null);
 
-    const success = await deleteMessage(roomId, targetMessage.id, scope);
+    const success = await deleteMessage(roomId, targetId, scope);
 
     setDeletingMessageId(null);
 
-    if (!success) {
+    let messageStillVisible = false;
+
+    setMessages((prev) => {
+      messageStillVisible = prev.some((item) => item.id === targetId);
+
+      if (success || !messageStillVisible) {
+        return removeMessage(prev, targetId);
+      }
+
+      return prev;
+    });
+
+    if (!success && messageStillVisible) {
       setErrorMessage("메시지 삭제에 실패했습니다.");
-      return;
-    }
-
-    setPendingDeleteMessage(null);
-    setMessages((prev) => removeMessage(prev, targetMessage.id));
-
-    if (scope === "all") {
-      publishRoomMessageDeletedEvent({
-        roomId,
-        messageId: targetMessage.id,
-      });
     }
   }
 
   function handleAttachmentSelect(event: ChangeEvent<HTMLInputElement>) {
-    const selectedFiles = event.target.files;
-
-    event.target.value = "";
+    const input = event.currentTarget;
+    const selectedFiles = input.files;
 
     if (!selectedFiles || selectedFiles.length === 0) {
       return;
@@ -608,10 +636,19 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
 
     if (remainingSlots <= 0) {
       setErrorMessage(`이미지는 최대 ${MAX_ATTACHMENT_COUNT}장까지 첨부할 수 있습니다.`);
+      input.value = "";
       return;
     }
 
     const files = Array.from(selectedFiles).slice(0, remainingSlots);
+    const invalidFiles = files.filter((file) => !isAttachableImage(file));
+
+    if (invalidFiles.length > 0) {
+      setErrorMessage("JPG, PNG, GIF, WEBP 이미지만 첨부할 수 있습니다.");
+      input.value = "";
+      return;
+    }
+
     const nextAttachments = files.map((file) => ({
       key: `${file.name}-${file.lastModified}-${file.size}`,
       file,
@@ -620,6 +657,15 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
 
     setPendingAttachments((prev) => [...prev, ...nextAttachments]);
     setErrorMessage(null);
+    input.value = "";
+  }
+
+  function handleOpenAttachmentPicker() {
+    if (sendingMessage || pendingAttachments.length >= MAX_ATTACHMENT_COUNT) {
+      return;
+    }
+
+    attachmentInputRef.current?.click();
   }
 
   function handleRemoveAttachment(key: string) {
@@ -653,44 +699,47 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     focusMessageInput();
 
     void (async () => {
-      let attachmentIds: number[] = [];
+      try {
+        let attachmentIds: number[] = [];
 
-      if (attachmentsToSend.length > 0) {
-        const uploadedFiles = await uploadFiles(
-          "MESSAGE",
-          attachmentsToSend.map((attachment) => attachment.file),
-        );
+        if (attachmentsToSend.length > 0) {
+          const uploadResult = await uploadFiles(
+            "MESSAGE",
+            attachmentsToSend.map((attachment) => attachment.file),
+          );
 
-        if (!uploadedFiles) {
+          if ("errorMessage" in uploadResult) {
+            setPendingAttachments(attachmentsToSend);
+            setMessageInput(contentToSend);
+            setErrorMessage(uploadResult.errorMessage);
+            return;
+          }
+
+          attachmentIds = uploadResult.files.map((file) => file.id);
+        }
+
+        const message = await sendMessage(roomId, contentToSend, attachmentIds);
+
+        for (const attachment of attachmentsToSend) {
+          URL.revokeObjectURL(attachment.previewUrl);
+        }
+
+        if (!message) {
           setPendingAttachments(attachmentsToSend);
           setMessageInput(contentToSend);
-          setErrorMessage("이미지 업로드에 실패했습니다.");
-          setSendingMessage(false);
-          focusMessageInput();
+          setErrorMessage("메시지 전송에 실패했습니다.");
           return;
         }
 
-        attachmentIds = uploadedFiles.map((file) => file.id);
-      }
-
-      const message = await sendMessage(roomId, contentToSend, attachmentIds);
-
-      for (const attachment of attachmentsToSend) {
-        URL.revokeObjectURL(attachment.previewUrl);
-      }
-
-      setSendingMessage(false);
-
-      if (!message) {
+        setMessages((prev) => appendMessage(prev, message));
+      } catch {
         setPendingAttachments(attachmentsToSend);
         setMessageInput(contentToSend);
-        setErrorMessage("메시지 전송에 실패했습니다.");
+        setErrorMessage("메시지 전송 중 오류가 발생했습니다.");
+      } finally {
+        setSendingMessage(false);
         focusMessageInput();
-        return;
       }
-
-      setMessages((prev) => appendMessage(prev, message));
-      focusMessageInput();
     })();
   }
 
@@ -957,6 +1006,9 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
 
         {pendingAttachments.length > 0 ? (
           <div className="shrink-0 border-t border-zinc-200 px-3 pt-3 dark:border-zinc-700">
+            <p className="mb-2 text-xs text-zinc-500">
+              첨부 {pendingAttachments.length}장 · 전송 버튼을 눌러 보내세요
+            </p>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {pendingAttachments.map((attachment) => (
                 <div key={attachment.key} className="relative shrink-0">
@@ -986,16 +1038,17 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
           <input
             ref={attachmentInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp"
             multiple
+            tabIndex={-1}
             className="hidden"
             onChange={handleAttachmentSelect}
           />
           <button
             type="button"
-            onClick={() => attachmentInputRef.current?.click()}
+            onClick={handleOpenAttachmentPicker}
             disabled={sendingMessage || pendingAttachments.length >= MAX_ATTACHMENT_COUNT}
-            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            className="shrink-0 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
             사진
           </button>
@@ -1067,7 +1120,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
             </h3>
             <p id="delete-message-description" className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
               <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                {formatDeletePreview(pendingDeleteMessage.message.content)}
+                {formatDeletePreview(pendingDeleteMessage.message)}
               </span>
               {" "}
               {pendingDeleteMessage.scope === "all"

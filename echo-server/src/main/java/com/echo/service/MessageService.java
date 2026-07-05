@@ -162,18 +162,23 @@ public class MessageService {
 			throw new IllegalArgumentException("Only the sender can delete a message for everyone");
 		}
 
-		List<StoredFile> attachmentFiles = messageAttachmentRepository.findByMessage_IdOrderBySortOrderAsc(messageId).stream()
-			.map(MessageAttachment::getFile)
-			.toList();
+		List<Long> attachmentFileIds = messageAttachmentRepository.findFileIdsByMessageId(messageId);
 
+		messageAttachmentRepository.deleteByMessageId(messageId);
 		messageRepository.delete(message);
 
-		for (StoredFile file : attachmentFiles) {
+		for (Long fileId : attachmentFileIds) {
+			StoredFile file = fileService.getStoredFileIfExists(fileId);
+
+			if (file == null) {
+				continue;
+			}
+
 			try {
 				fileService.deleteStoredFile(file);
 			}
-			catch (java.io.IOException ex) {
-				throw new IllegalArgumentException("Failed to delete attachment file", ex);
+			catch (Exception ex) {
+				// 첨부 파일 정리 실패 시에도 메시지 삭제는 유지한다.
 			}
 		}
 

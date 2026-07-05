@@ -18,7 +18,7 @@ Discord/Slack 라이트 수준의 메신저로, 인증·채팅방·실시간 메
 | 프론트엔드 | Next.js + React + TypeScript |
 | 데이터베이스 | PostgreSQL |
 | 실시간 | Spring WebSocket + STOMP |
-| 인증 | Spring Security + JWT |
+| 인증 | Spring Security + OAuth2 + JWT |
 
 ---
 
@@ -42,7 +42,7 @@ Discord/Slack 라이트 수준의 메신저로, 인증·채팅방·실시간 메
 
 | 기능 | 설명 |
 | :--- | :--- |
-| 회원가입 / 로그인 | Spring Security + JWT 기반 인증 |
+| 소셜 로그인 | Google / Naver OAuth2 + JWT (자체 회원가입 없음) |
 | 채팅방 | 생성 · 초대 · 목록 조회 |
 | 실시간 메시지 | STOMP WebSocket 기반 송수신 |
 | 메시지 영속화 | PostgreSQL에 메시지 저장 및 히스토리 조회 |
@@ -79,7 +79,7 @@ flowchart LR
 
 | 흐름 | 설명 |
 | :--- | :--- |
-| REST API | 회원가입·로그인, 채팅방 CRUD, 메시지 히스토리 조회 |
+| REST API | 소셜 로그인, 채팅방 CRUD, 메시지 히스토리 조회 |
 | STOMP WebSocket | 실시간 메시지, 온라인 상태 |
 | JWT | REST 및 WebSocket 연결 시 인증·인가 |
 
@@ -89,7 +89,7 @@ flowchart LR
 
 | 테이블 | 주요 컬럼 | 설명 |
 | :--- | :--- | :--- |
-| `users` | `id`, `email`, `display_name`, `provider`, `provider_id`, `password_hash`, `created_at` | 사용자 계정 (OAuth/로컬) |
+| `users` | `id`, `email`, `display_name`, `provider`, `provider_id`, `created_at` | 사용자 계정 (OAuth) |
 | `rooms` | `id`, `name`, `type`, `created_by`, `created_at` | 채팅방 (그룹 / DM) |
 | `room_members` | `room_id`, `user_id`, `joined_at` | 채팅방 참여자 |
 | `messages` | `id`, `room_id`, `sender_id`, `content`, `created_at` | 메시지 영속화 |
@@ -204,7 +204,9 @@ npm run dev
 
 ## 인증 (Phase 1)
 
-Google / Naver OAuth2 로그인 후 JWT access token을 발급합니다. OAuth 성공 시 백엔드가 프론트엔드 `/auth/callback?code={exchangeCode}` 로 리다이렉트하고, 프론트는 `POST /api/auth/exchange`로 JWT를 교환합니다.
+Google / Naver **소셜 로그인**만 지원합니다. 자체 이메일·비밀번호 회원가입은 제공하지 않습니다.
+
+OAuth 성공 시 백엔드가 프론트엔드 `/auth/callback?code={exchangeCode}` 로 리다이렉트하고, 프론트는 `POST /api/auth/exchange`로 JWT를 교환합니다.
 
 ### 환경 변수
 

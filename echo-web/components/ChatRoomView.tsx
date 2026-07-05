@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 
+import LinkPreviewCard from "@/components/LinkPreviewCard";
 import MessageContent from "@/components/MessageContent";
-import { type SubmitEvent, useEffect, useRef, useState } from "react";
+import { type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AuthUser, requireSessionUser } from "@/lib/auth";
+import { extractFirstUrl } from "@/lib/link-preview";
 import { Message, fetchMessages, sendMessage, type MemberReadState } from "@/lib/messages";
 import { formatUnreadCount, publishRoomReadEvent, publishRoomUpdateEvent, subscribeRoomUpdateEvents } from "@/lib/room-live";
 import { Room, canInviteToRoom, canRenameRoom, fetchRoom, formatRoomMemberSummary, getRoomDisplayName, inviteRoomMember, markRoomRead, updateRoomName } from "@/lib/rooms";
@@ -148,6 +150,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [messageInput, setMessageInput] = useState("");
+  const draftPreviewUrl = useMemo(() => extractFirstUrl(messageInput), [messageInput]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [renameErrorMessage, setRenameErrorMessage] = useState<string | null>(null);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -676,6 +679,12 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
           )}
           <div ref={messagesEndRef} />
         </div>
+
+        {draftPreviewUrl ? (
+          <div className="shrink-0 border-t border-zinc-200 px-3 pt-3 dark:border-zinc-700">
+            <LinkPreviewCard url={draftPreviewUrl} debounceMs={400} />
+          </div>
+        ) : null}
 
         <form
           className="flex gap-2 border-t border-zinc-200 p-3 dark:border-zinc-700"

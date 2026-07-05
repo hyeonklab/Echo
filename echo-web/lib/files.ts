@@ -214,6 +214,35 @@ export async function downloadFiles(
 }
 
 /**
+ * 프로필 사진을 기본(초기) 상태로 되돌린다.
+ */
+export async function resetAvatar(): Promise<AuthUser | null> {
+  const token = await ensureAccessToken();
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const response = await apiFetch(`${getApiUrl()}/api/users/me/avatar`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return normalizeAuthUser((await response.json()) as AuthUser);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * 프로필 사진을 업로드한다.
  */
 export async function uploadAvatar(file: File): Promise<AuthUser | null> {

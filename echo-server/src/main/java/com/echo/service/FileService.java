@@ -117,6 +117,24 @@ public class FileService {
 	}
 
 	/**
+	 * 사용자 프로필 사진을 기본(초기) 상태로 되돌린다.
+	 */
+	@Transactional
+	public UserResponse removeUserAvatar(Long userId) throws IOException {
+		User user = userService.getUser(userId);
+		StoredFile previousAvatar = user.getAvatarFile();
+
+		if (previousAvatar == null) {
+			return UserResponse.from(user);
+		}
+
+		user.clearAvatarFile();
+		deleteStoredFile(previousAvatar);
+
+		return UserResponse.from(user);
+	}
+
+	/**
 	 * 파일 접근 권한을 검사한다.
 	 */
 	@Transactional(readOnly = true)

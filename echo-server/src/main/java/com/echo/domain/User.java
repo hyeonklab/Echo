@@ -76,16 +76,19 @@ public class User {
 	}
 
 	/**
-	 * OAuth 로그인 시 프로필 정보를 갱신한다.
+	 * OAuth 로그인 시 이메일 정보를 갱신한다.
 	 */
-	public void updateOAuthProfile(String email, String displayName) {
+	public void updateOAuthProfile(String email) {
 		if (email != null && !email.isBlank()) {
 			this.email = email;
 		}
+	}
 
-		if (displayName != null && !displayName.isBlank()) {
-			this.displayName = displayName;
-		}
+	/**
+	 * 표시 이름을 변경한다.
+	 */
+	public void updateDisplayName(String displayName) {
+		this.displayName = displayName;
 	}
 
 	/**
@@ -93,6 +96,13 @@ public class User {
 	 */
 	public void updateAvatarFile(StoredFile avatarFile) {
 		this.avatarFile = avatarFile;
+	}
+
+	/**
+	 * 프로필 사진을 제거한다.
+	 */
+	public void clearAvatarFile() {
+		this.avatarFile = null;
 	}
 
 }

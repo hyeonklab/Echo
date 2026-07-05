@@ -26,6 +26,7 @@ public class UserService {
 
 	private static final int MIN_SEARCH_KEYWORD_LENGTH = 2;
 	private static final int MAX_SEARCH_RESULTS = 20;
+	private static final int MAX_DISPLAY_NAME_LENGTH = 255;
 
 	private final UserRepository userRepository;
 
@@ -40,7 +41,7 @@ public class UserService {
 		String displayName = resolveDisplayName(oauth2User);
 
 		return userRepository.findByProviderAndProviderId(provider, providerId)
-			.map(existing -> updateOAuthProfile(existing, email, displayName))
+			.map(existing -> updateOAuthProfile(existing, email))
 			.orElseGet(() -> createOAuthUser(provider, providerId, email, displayName));
 	}
 
@@ -62,6 +63,27 @@ public class UserService {
 	}
 
 	/**
+	 * 표시 이름을 변경한다.
+	 */
+	@Transactional
+	public UserResponse updateDisplayName(Long userId, String displayName) {
+		String trimmedName = displayName == null ? "" : displayName.trim();
+
+		if (trimmedName.isEmpty()) {
+			throw new IllegalArgumentException("Display name is required");
+		}
+
+		if (trimmedName.length() > MAX_DISPLAY_NAME_LENGTH) {
+			throw new IllegalArgumentException("Display name is too long");
+		}
+
+		User user = getUser(userId);
+		user.updateDisplayName(trimmedName);
+
+		return UserResponse.from(user);
+	}
+
+	/**
 	 * 이름 또는 이메일로 사용자를 검색한다.
 	 */
 	@Transactional(readOnly = true)
@@ -78,8 +100,8 @@ public class UserService {
 			.toList();
 	}
 
-	private User updateOAuthProfile(User user, String email, String displayName) {
-		user.updateOAuthProfile(email, displayName);
+	private User updateOAuthProfile(User user, String email) {
+		user.updateOAuthProfile(email);
 
 		return user;
 	}

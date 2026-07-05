@@ -1,4 +1,4 @@
-import { ensureAccessToken } from "@/lib/auth";
+import { AuthUser, ensureAccessToken, normalizeAuthUser } from "@/lib/auth";
 import { apiFetch, getApiUrl } from "@/lib/api";
 
 export type SearchUser = {
@@ -66,4 +66,41 @@ export async function searchUsers(keyword: string): Promise<SearchUser[]> {
   }
 
   return response.json() as Promise<SearchUser[]>;
+}
+
+/**
+ * 표시 이름을 변경한다.
+ */
+export async function updateDisplayName(displayName: string): Promise<AuthUser | null> {
+  const token = await resolveAccessToken();
+
+  if (!token) {
+    return null;
+  }
+
+  const trimmedName = displayName.trim();
+
+  if (!trimmedName) {
+    return null;
+  }
+
+  try {
+    const response = await apiFetch(`${getApiUrl()}/api/users/me`, {
+      method: "PATCH",
+      headers: {
+        ...authHeaders(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ displayName: trimmedName }),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return normalizeAuthUser((await response.json()) as AuthUser);
+  } catch {
+    return null;
+  }
 }

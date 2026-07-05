@@ -3,9 +3,7 @@
 import { Fragment } from "react";
 
 import LinkPreviewCard from "@/components/LinkPreviewCard";
-import { extractUrls, normalizeUrl } from "@/lib/link-preview";
-
-const LINK_URL_PATTERN = /https?:\/\/[^\s<>"')\]}]+/gi;
+import { extractUrls, findLinkMatches } from "@/lib/link-preview";
 
 type MessageContentProps = {
   content: string;
@@ -34,26 +32,25 @@ export default function MessageContent({ content, isMine }: Readonly<MessageCont
  * 메시지 텍스트의 URL을 클릭 가능한 링크로 변환한다.
  */
 function renderLinkedText(content: string, isMine: boolean) {
+  const matches = findLinkMatches(content);
+
+  if (matches.length === 0) {
+    return content;
+  }
+
   const parts: Array<string | { href: string; label: string }> = [];
   let lastIndex = 0;
 
-  for (const match of content.matchAll(LINK_URL_PATTERN)) {
-    const rawUrl = match[0];
-    const start = match.index ?? 0;
-
-    if (start > lastIndex) {
-      parts.push(content.slice(lastIndex, start));
+  for (const match of matches) {
+    if (match.start > lastIndex) {
+      parts.push(content.slice(lastIndex, match.start));
     }
 
     parts.push({
-      href: normalizeUrl(rawUrl),
-      label: rawUrl,
+      href: match.href,
+      label: match.raw,
     });
-    lastIndex = start + rawUrl.length;
-  }
-
-  if (parts.length === 0) {
-    return content;
+    lastIndex = match.end;
   }
 
   if (lastIndex < content.length) {

@@ -9,21 +9,108 @@ export type LinkPreview = {
   siteName: string | null;
 };
 
-const URL_PATTERN = /https?:\/\/[^\s<>"')\]}]+/gi;
+export type LinkMatch = {
+  raw: string;
+  href: string;
+  start: number;
+  end: number;
+};
+
+const SCHEME_URL_PATTERN = /https?:\/\/[^\s<>"']+/gi;
+const BARE_DOMAIN_PATTERN =
+  /(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(?:\/[^\s<>"']*)?/gi;
+
 const previewCache = new Map<string, LinkPreview | null>();
 const pendingRequests = new Map<string, Promise<LinkPreview | null>>();
+
+/**
+ * URL 끝의 문장부호를 제거한다.
+ */
+export function normalizeUrl(url: string): string {
+  return url.replace(/[.,;:!?)]+$/u, "");
+}
+
+/**
+ * 상대 URL을 https 절대 URL로 변환한다.
+ */
+export function toAbsoluteUrl(url: string): string {
+  const trimmed = normalizeUrl(url.trim());
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
+}
+
+/**
+ * 링크 구간이 유효한지 검사한다.
+ */
+function isValidLinkMatch(text: string, start: number, end: number): boolean {
+  if (start > 0 && text[start - 1] === "@") {
+    return false;
+  }
+
+  return end > start;
+}
+
+/**
+ * 텍스트에서 링크 구간 목록을 추출한다.
+ */
+export function findLinkMatches(text: string): LinkMatch[] {
+  const matches: LinkMatch[] = [];
+  const occupied = new Array<boolean>(text.length).fill(false);
+
+  function addMatch(rawValue: string, start: number) {
+    const raw = normalizeUrl(rawValue);
+    const end = start + rawValue.length;
+
+    if (!isValidLinkMatch(text, start, end)) {
+      return;
+    }
+
+    for (let index = start; index < end; index += 1) {
+      if (occupied[index]) {
+        return;
+      }
+    }
+
+    for (let index = start; index < end; index += 1) {
+      occupied[index] = true;
+    }
+
+    matches.push({
+      raw,
+      href: toAbsoluteUrl(raw),
+      start,
+      end,
+    });
+  }
+
+  for (const match of text.matchAll(SCHEME_URL_PATTERN)) {
+    if (match.index == null) {
+      continue;
+    }
+
+    addMatch(match[0], match.index);
+  }
+
+  for (const match of text.matchAll(BARE_DOMAIN_PATTERN)) {
+    if (match.index == null) {
+      continue;
+    }
+
+    addMatch(match[0], match.index);
+  }
+
+  return matches.sort((left, right) => left.start - right.start);
+}
 
 /**
  * 텍스트에서 URL 목록을 추출한다.
  */
 export function extractUrls(text: string): string[] {
-  const matches = text.match(URL_PATTERN);
-
-  if (!matches) {
-    return [];
-  }
-
-  return [...new Set(matches.map((url) => normalizeUrl(url)))];
+  return [...new Set(findLinkMatches(text).map((item) => item.href))];
 }
 
 /**
@@ -40,17 +127,10 @@ export function extractFirstUrl(text: string): string | null {
 }
 
 /**
- * URL 끝의 문장부호를 제거한다.
- */
-export function normalizeUrl(url: string): string {
-  return url.replace(/[.,;:!?)]+$/u, "");
-}
-
-/**
  * 링크 미리보기 메타데이터를 조회한다.
  */
 export async function fetchLinkPreview(url: string): Promise<LinkPreview | null> {
-  const normalizedUrl = normalizeUrl(url);
+  const normalizedUrl = toAbsoluteUrl(url);
 
   if (previewCache.has(normalizedUrl)) {
     return previewCache.get(normalizedUrl) ?? null;

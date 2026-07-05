@@ -6,6 +6,7 @@ export type Friend = {
   email: string | null;
   displayName: string;
   provider: "LOCAL" | "GOOGLE" | "NAVER";
+  avatarFileId: number | null;
   addedAt: string;
   online: boolean;
 };

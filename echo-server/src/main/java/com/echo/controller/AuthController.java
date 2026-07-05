@@ -19,6 +19,7 @@ import com.echo.dto.TokenResponse;
 import com.echo.dto.UserResponse;
 import com.echo.security.UserPrincipal;
 import com.echo.service.AuthService;
+import com.echo.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 
 	private final AuthService authService;
+	private final UserService userService;
 
 	/**
 	 * JWT로 인증된 현재 사용자 정보를 반환한다.
@@ -44,7 +46,7 @@ public class AuthController {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
 		}
 
-		return UserResponse.fromPrincipal(principal);
+		return userService.getUserResponse(principal.getUserId());
 	}
 
 	/**

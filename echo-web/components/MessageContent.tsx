@@ -3,22 +3,35 @@
 import { Fragment } from "react";
 
 import LinkPreviewCard from "@/components/LinkPreviewCard";
+import MessageAttachmentGrid from "@/components/MessageAttachmentGrid";
 import { extractUrls, findLinkMatches } from "@/lib/link-preview";
+import type { MessageFile } from "@/lib/messages";
 
 type MessageContentProps = {
   content: string;
+  attachments?: MessageFile[];
   isMine: boolean;
 };
 
 /**
  * 메시지 본문과 링크 미리보기를 렌더링한다.
  */
-export default function MessageContent({ content, isMine }: Readonly<MessageContentProps>) {
+export default function MessageContent({
+  content,
+  attachments = [],
+  isMine,
+}: Readonly<MessageContentProps>) {
   const firstUrl = extractUrls(content)[0] ?? null;
+  const hasText = content.trim().length > 0;
 
   return (
     <>
-      <p className="whitespace-pre-wrap break-words text-sm">{renderLinkedText(content, isMine)}</p>
+      {hasText ? (
+        <p className="whitespace-pre-wrap break-words text-sm">{renderLinkedText(content, isMine)}</p>
+      ) : null}
+      {attachments.length > 0 ? (
+        <MessageAttachmentGrid attachments={attachments} isMine={isMine} />
+      ) : null}
       {firstUrl ? (
         <div className="mt-2">
           <LinkPreviewCard url={firstUrl} isMine={isMine} />

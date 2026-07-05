@@ -4,6 +4,7 @@ import { type SubmitEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import OnlineStatusDot from "@/components/OnlineStatusDot";
+import UserAvatar from "@/components/UserAvatar";
 import { AuthUser, requireSessionUser } from "@/lib/auth";
 import {
   Friend,
@@ -224,9 +225,10 @@ export default function FriendList() {
             <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
               {currentUser ? (
                 <li className="flex items-center gap-3 px-4 py-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-700 dark:bg-zinc-700 dark:text-zinc-100">
-                    {currentUser.displayName.slice(0, 1)}
-                  </div>
+                  <UserAvatar
+                    displayName={currentUser.displayName}
+                    avatarFileId={currentUser.avatarFileId}
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-2 truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                       <OnlineStatusDot online={isSelfOnline} />
@@ -259,9 +261,10 @@ export default function FriendList() {
 
                   return (
                     <li key={friend.id} className="flex items-center gap-3 px-4 py-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-700 dark:bg-zinc-700 dark:text-zinc-100">
-                        {friend.displayName.slice(0, 1)}
-                      </div>
+                      <UserAvatar
+                        displayName={friend.displayName}
+                        avatarFileId={friend.avatarFileId}
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="flex items-center gap-2 truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
                           <OnlineStatusDot online={isOnline} />

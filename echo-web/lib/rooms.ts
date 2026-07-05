@@ -8,6 +8,7 @@ export type RoomMember = {
   displayName: string;
   email: string | null;
   provider: "LOCAL" | "GOOGLE" | "NAVER";
+  avatarFileId: number | null;
 };
 
 export type LastMessagePreview = {
@@ -106,6 +107,46 @@ export function getRoomTypeLabel(type: RoomType): string {
   }
 
   return "그룹";
+}
+
+/**
+ * 채팅방 멤버를 userId로 조회한다.
+ */
+export function getRoomMember(room: Room, userId: number): RoomMember | undefined {
+  return room.members.find((member) => member.userId === userId);
+}
+
+/**
+ * 채팅방 목록/헤더용 아바타 대상 멤버 목록을 반환한다.
+ */
+export function getRoomAvatarMembers(room: Room, currentUserId: number): RoomMember[] {
+  if (room.type === "DM") {
+    const otherMember = room.members.find((member) => member.userId !== currentUserId);
+
+    if (otherMember) {
+      return [otherMember];
+    }
+
+    return room.members.slice(0, 1);
+  }
+
+  if (room.type === "SELF") {
+    const selfMember = room.members.find((member) => member.userId === currentUserId);
+
+    if (selfMember) {
+      return [selfMember];
+    }
+
+    return room.members.slice(0, 1);
+  }
+
+  const otherMembers = room.members.filter((member) => member.userId !== currentUserId);
+
+  if (otherMembers.length > 0) {
+    return otherMembers.slice(0, 4);
+  }
+
+  return room.members.slice(0, 4);
 }
 
 /**

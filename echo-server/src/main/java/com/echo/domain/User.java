@@ -6,9 +6,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -49,6 +52,10 @@ public class User {
 	@Column(name = "password_hash")
 	private String passwordHash;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "avatar_file_id")
+	private StoredFile avatarFile;
+
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -79,6 +86,13 @@ public class User {
 		if (displayName != null && !displayName.isBlank()) {
 			this.displayName = displayName;
 		}
+	}
+
+	/**
+	 * 프로필 사진을 변경한다.
+	 */
+	public void updateAvatarFile(StoredFile avatarFile) {
+		this.avatarFile = avatarFile;
 	}
 
 }

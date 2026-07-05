@@ -36,7 +36,8 @@ public record RoomResponse(
 				member.getUser().getId(),
 				member.getUser().getDisplayName(),
 				member.getUser().getEmail(),
-				member.getUser().getProvider()
+				member.getUser().getProvider(),
+				member.getUser().getAvatarFile() == null ? null : member.getUser().getAvatarFile().getId()
 			))
 			.toList();
 

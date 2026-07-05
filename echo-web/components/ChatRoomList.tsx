@@ -5,6 +5,7 @@ import { type SubmitEvent, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { AuthUser, requireSessionUser } from "@/lib/auth";
+import RoomAvatar from "@/components/RoomAvatar";
 import {
   Room,
   createDmRoom,
@@ -316,7 +317,15 @@ export default function ChatRoomList({ mode = "page", activeRoomId = null }: Cha
                         : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      {currentUser ? (
+                        <RoomAvatar
+                          room={room}
+                          currentUserId={currentUser.id}
+                          className="h-10 w-10 shrink-0"
+                          textClassName="text-xs font-semibold"
+                        />
+                      ) : null}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <span className="truncate font-medium text-zinc-900 dark:text-zinc-100">
@@ -353,7 +362,14 @@ export default function ChatRoomList({ mode = "page", activeRoomId = null }: Cha
                   className="absolute inset-0 z-0 rounded-xl"
                   aria-label={`${displayName} 채팅방 열기`}
                 />
-                <div className="pointer-events-none relative z-10 flex items-start justify-between gap-3 p-4">
+                <div className="pointer-events-none relative z-10 flex items-start gap-3 p-4">
+                  {currentUser ? (
+                    <RoomAvatar
+                      room={room}
+                      currentUserId={currentUser.id}
+                      className="h-12 w-12 shrink-0"
+                    />
+                  ) : null}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <span className="truncate font-medium text-zinc-900 dark:text-zinc-100">

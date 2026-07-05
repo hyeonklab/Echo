@@ -4,11 +4,14 @@ import Link from "next/link";
 
 import LinkPreviewCard from "@/components/LinkPreviewCard";
 import MessageContent from "@/components/MessageContent";
-import { type MouseEvent, type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
+import RoomAvatar from "@/components/RoomAvatar";
+import UserAvatar from "@/components/UserAvatar";
+import { type ChangeEvent, type MouseEvent, type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AuthUser, requireSessionUser } from "@/lib/auth";
 import { extractFirstUrl } from "@/lib/link-preview";
+import { uploadFiles } from "@/lib/files";
 import {
   Message,
   type MessageDeleteScope,
@@ -18,7 +21,7 @@ import {
   type MemberReadState,
 } from "@/lib/messages";
 import { formatUnreadCount, publishRoomMessageDeletedEvent, publishRoomReadEvent, publishRoomUpdateEvent, subscribeRoomUpdateEvents } from "@/lib/room-live";
-import { Room, canInviteToRoom, canRenameRoom, fetchRoom, formatRoomMemberSummary, getRoomDisplayName, inviteRoomMember, markRoomRead, updateRoomName } from "@/lib/rooms";
+import { Room, canInviteToRoom, canRenameRoom, fetchRoom, formatRoomMemberSummary, getRoomDisplayName, getRoomMember, inviteRoomMember, markRoomRead, updateRoomName } from "@/lib/rooms";
 import { subscribeRoomMessageDeletes, subscribeRoomMessages, subscribeRoomRead } from "@/lib/stomp";
 import { SearchUser, getProviderLabel, searchUsers } from "@/lib/users";
 
@@ -31,6 +34,14 @@ type MessageContextMenuState = {
   y: number;
   message: Message;
 };
+
+type PendingAttachment = {
+  key: string;
+  file: File;
+  previewUrl: string;
+};
+
+const MAX_ATTACHMENT_COUNT = 30;
 
 /**
  * 삭제 확인용 메시지 미리보기를 반환한다.
@@ -162,6 +173,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
   const lastMarkedMessageIdRef = useRef<number | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
@@ -170,6 +182,8 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [messageInput, setMessageInput] = useState("");
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const draftPreviewUrl = useMemo(() => extractFirstUrl(messageInput), [messageInput]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [renameErrorMessage, setRenameErrorMessage] = useState<string | null>(null);
@@ -192,7 +206,22 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   const [deletingMessageId, setDeletingMessageId] = useState<number | null>(null);
 
   useEffect(() => {
+    return () => {
+      for (const attachment of pendingAttachments) {
+        URL.revokeObjectURL(attachment.previewUrl);
+      }
+    };
+  }, [pendingAttachments]);
+
+  useEffect(() => {
     lastMarkedMessageIdRef.current = null;
+    setPendingAttachments((prev) => {
+      for (const attachment of prev) {
+        URL.revokeObjectURL(attachment.previewUrl);
+      }
+
+      return [];
+    });
   }, [roomId]);
 
   useEffect(() => {
@@ -566,23 +595,95 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     }
   }
 
+  function handleAttachmentSelect(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = event.target.files;
+
+    event.target.value = "";
+
+    if (!selectedFiles || selectedFiles.length === 0) {
+      return;
+    }
+
+    const remainingSlots = MAX_ATTACHMENT_COUNT - pendingAttachments.length;
+
+    if (remainingSlots <= 0) {
+      setErrorMessage(`이미지는 최대 ${MAX_ATTACHMENT_COUNT}장까지 첨부할 수 있습니다.`);
+      return;
+    }
+
+    const files = Array.from(selectedFiles).slice(0, remainingSlots);
+    const nextAttachments = files.map((file) => ({
+      key: `${file.name}-${file.lastModified}-${file.size}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+
+    setPendingAttachments((prev) => [...prev, ...nextAttachments]);
+    setErrorMessage(null);
+  }
+
+  function handleRemoveAttachment(key: string) {
+    setPendingAttachments((prev) => {
+      const target = prev.find((attachment) => attachment.key === key);
+
+      if (target) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+
+      return prev.filter((attachment) => attachment.key !== key);
+    });
+  }
+
   function handleSendMessage(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const trimmed = messageInput.trim();
 
-    if (!trimmed) {
+    if (!trimmed && pendingAttachments.length === 0) {
       return;
     }
 
     const contentToSend = trimmed;
+    const attachmentsToSend = [...pendingAttachments];
 
     setErrorMessage(null);
     setMessageInput("");
+    setPendingAttachments([]);
+    setSendingMessage(true);
     focusMessageInput();
 
-    void sendMessage(roomId, contentToSend).then((message) => {
+    void (async () => {
+      let attachmentIds: number[] = [];
+
+      if (attachmentsToSend.length > 0) {
+        const uploadedFiles = await uploadFiles(
+          "MESSAGE",
+          attachmentsToSend.map((attachment) => attachment.file),
+        );
+
+        if (!uploadedFiles) {
+          setPendingAttachments(attachmentsToSend);
+          setMessageInput(contentToSend);
+          setErrorMessage("이미지 업로드에 실패했습니다.");
+          setSendingMessage(false);
+          focusMessageInput();
+          return;
+        }
+
+        attachmentIds = uploadedFiles.map((file) => file.id);
+      }
+
+      const message = await sendMessage(roomId, contentToSend, attachmentIds);
+
+      for (const attachment of attachmentsToSend) {
+        URL.revokeObjectURL(attachment.previewUrl);
+      }
+
+      setSendingMessage(false);
+
       if (!message) {
+        setPendingAttachments(attachmentsToSend);
+        setMessageInput(contentToSend);
         setErrorMessage("메시지 전송에 실패했습니다.");
         focusMessageInput();
         return;
@@ -590,7 +691,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
 
       setMessages((prev) => appendMessage(prev, message));
       focusMessageInput();
-    });
+    })();
   }
 
   if (loading) {
@@ -619,7 +720,13 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-start justify-between gap-4 border-b border-zinc-200 pb-4 dark:border-zinc-700">
+      <div className="flex items-start gap-3 border-b border-zinc-200 pb-4 dark:border-zinc-700">
+        <RoomAvatar
+          room={room}
+          currentUserId={currentUser.id}
+          className="h-11 w-11 shrink-0"
+          textClassName="text-sm font-semibold"
+        />
         <div className="min-w-0 flex-1">
           {isRenaming ? (
             <form className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center" onSubmit={handleSaveRename}>
@@ -775,8 +882,13 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
           {messages.length === 0 ? (
             <p className="text-center text-sm text-zinc-500">아직 메시지가 없습니다. 첫 메시지를 보내 보세요.</p>
           ) : (
-            messages.map((message) => {
+            messages.map((message, index) => {
               const isMine = message.senderId === currentUser.id;
+              const prevMessage = index > 0 ? messages[index - 1] : null;
+              const showSenderAvatar =
+                !isMine
+                && (prevMessage == null || prevMessage.senderId !== message.senderId);
+              const senderMember = getRoomMember(room, message.senderId);
               const unreadCountLabel = getOwnMessageUnreadCount(
                 message,
                 room,
@@ -787,6 +899,18 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
 
               return (
                 <div key={message.id} className={`flex items-end gap-1.5 ${isMine ? "justify-end" : "justify-start"}`}>
+                  {!isMine ? (
+                    showSenderAvatar ? (
+                      <UserAvatar
+                        displayName={senderMember?.displayName ?? message.senderDisplayName}
+                        avatarFileId={senderMember?.avatarFileId}
+                        className="mb-0.5 h-8 w-8 shrink-0"
+                        textClassName="text-[11px] font-semibold"
+                      />
+                    ) : (
+                      <div className="mb-0.5 h-8 w-8 shrink-0" aria-hidden />
+                    )
+                  ) : null}
                   {isMine && unreadCountLabel ? (
                     <span className="pb-1 text-xs font-semibold text-sky-400 dark:text-sky-500">
                       {unreadCountLabel}
@@ -800,12 +924,16 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
                     } ${deletingMessageId === message.id ? "opacity-50" : ""}`}
                     onContextMenu={(event) => handleOpenMessageMenu(event, message)}
                   >
-                    {!isMine ? (
+                    {!isMine && showSenderAvatar && room.type === "GROUP" ? (
                       <p className="mb-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
                         {message.senderDisplayName}
                       </p>
                     ) : null}
-                    <MessageContent content={message.content} isMine={isMine} />
+                    <MessageContent
+                      content={message.content}
+                      attachments={message.attachments ?? []}
+                      isMine={isMine}
+                    />
                     <p
                       className={`mt-1 text-[11px] ${
                         isMine ? "text-zinc-300 dark:text-zinc-500" : "text-zinc-400"
@@ -827,10 +955,50 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
           </div>
         ) : null}
 
+        {pendingAttachments.length > 0 ? (
+          <div className="shrink-0 border-t border-zinc-200 px-3 pt-3 dark:border-zinc-700">
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {pendingAttachments.map((attachment) => (
+                <div key={attachment.key} className="relative shrink-0">
+                  <img
+                    src={attachment.previewUrl}
+                    alt={attachment.file.name}
+                    className="h-20 w-20 rounded-lg object-cover"
+                  />
+                  <button
+                    type="button"
+                    aria-label="첨부 이미지 제거"
+                    onClick={() => handleRemoveAttachment(attachment.key)}
+                    className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 text-xs text-white"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <form
           className="flex gap-2 border-t border-zinc-200 p-3 dark:border-zinc-700"
           onSubmit={handleSendMessage}
         >
+          <input
+            ref={attachmentInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            multiple
+            className="hidden"
+            onChange={handleAttachmentSelect}
+          />
+          <button
+            type="button"
+            onClick={() => attachmentInputRef.current?.click()}
+            disabled={sendingMessage || pendingAttachments.length >= MAX_ATTACHMENT_COUNT}
+            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          >
+            사진
+          </button>
           <input
             ref={messageInputRef}
             type="text"
@@ -839,13 +1007,14 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
             placeholder="메시지를 입력하세요"
             className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
             autoFocus
+            disabled={sendingMessage}
           />
           <button
             type="submit"
-            disabled={!messageInput.trim()}
+            disabled={sendingMessage || (!messageInput.trim() && pendingAttachments.length === 0)}
             className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
           >
-            전송
+            {sendingMessage ? "전송 중..." : "전송"}
           </button>
         </form>
       </div>

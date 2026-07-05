@@ -1,6 +1,15 @@
 import { ensureAccessToken } from "@/lib/auth";
 import { apiFetch, getApiUrl } from "@/lib/api";
 
+export type MessageType = "TEXT" | "IMAGE_ALBUM";
+
+export type MessageFile = {
+  id: number;
+  originalName: string;
+  contentType: string;
+  sizeBytes: number;
+};
+
 export type MessageDeleteScope = "me" | "all";
 
 export type MessageDeletedEvent = {
@@ -14,6 +23,8 @@ export type Message = {
   senderId: number;
   senderDisplayName: string;
   content: string;
+  messageType: MessageType;
+  attachments: MessageFile[];
   createdAt: string;
 };
 
@@ -88,7 +99,11 @@ export async function fetchMessages(
 /**
  * 채팅방에 메시지를 전송한다.
  */
-export async function sendMessage(roomId: number, content: string): Promise<Message | null> {
+export async function sendMessage(
+  roomId: number,
+  content: string,
+  attachmentIds: number[] = [],
+): Promise<Message | null> {
   const token = await resolveAccessToken();
 
   if (!token) {
@@ -98,7 +113,7 @@ export async function sendMessage(roomId: number, content: string): Promise<Mess
   const response = await apiFetch(`${getApiUrl()}/api/rooms/${roomId}/messages`, {
     method: "POST",
     headers: authHeaders(token),
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, attachmentIds }),
     cache: "no-store",
   });
 

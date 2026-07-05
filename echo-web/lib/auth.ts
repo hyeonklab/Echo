@@ -11,6 +11,7 @@ export type AuthUser = {
   email: string | null;
   displayName: string;
   provider: "LOCAL" | "GOOGLE" | "NAVER";
+  avatarFileId: number | null;
 };
 
 export type TokenResponse = {
@@ -237,8 +238,15 @@ export async function fetchCurrentUser(token: string): Promise<AuthUser | null> 
       return null;
     }
 
-    return response.json() as Promise<AuthUser>;
+    return normalizeAuthUser((await response.json()) as AuthUser);
   } catch {
     return null;
   }
+}
+
+export function normalizeAuthUser(user: AuthUser): AuthUser {
+  return {
+    ...user,
+    avatarFileId: user.avatarFileId ?? null,
+  };
 }

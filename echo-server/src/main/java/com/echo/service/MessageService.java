@@ -3,7 +3,9 @@ package com.echo.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -11,14 +13,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.echo.domain.Message;
+import com.echo.domain.MessageAttachment;
 import com.echo.domain.MessageHidden;
+import com.echo.domain.MessageType;
 import com.echo.domain.Room;
+import com.echo.domain.StoredFile;
 import com.echo.domain.User;
+import com.echo.dto.FileResponse;
 import com.echo.dto.MessageDeletedResponse;
 import com.echo.dto.MessageHistoryResponse;
 import com.echo.dto.MessageResponse;
 import com.echo.dto.MemberReadStateResponse;
 import com.echo.dto.SendMessageRequest;
+import com.echo.repository.MessageAttachmentRepository;
 import com.echo.repository.MessageHiddenRepository;
 import com.echo.repository.MessageRepository;
 import com.echo.repository.RoomMemberRepository;
@@ -37,10 +44,12 @@ public class MessageService {
 	private static final int MAX_LIMIT = 100;
 
 	private final MessageRepository messageRepository;
+	private final MessageAttachmentRepository messageAttachmentRepository;
 	private final MessageHiddenRepository messageHiddenRepository;
 	private final RoomRepository roomRepository;
 	private final RoomMemberRepository roomMemberRepository;
 	private final UserService userService;
+	private final FileService fileService;
 	private final MessageBroadcastService messageBroadcastService;
 	private final RoomReadStateService roomReadStateService;
 
@@ -66,9 +75,7 @@ public class MessageService {
 		List<Message> ascendingMessages = new ArrayList<>(messages);
 		Collections.reverse(ascendingMessages);
 
-		List<MessageResponse> responses = ascendingMessages.stream()
-			.map(MessageResponse::from)
-			.toList();
+		List<MessageResponse> responses = toMessageResponses(ascendingMessages);
 
 		Long peerLastReadMessageId = roomReadStateService.getPeerLastReadMessageId(roomId, userId);
 		List<MemberReadStateResponse> memberReadStates = roomReadStateService.getMemberReadStates(roomId, userId);
@@ -83,13 +90,36 @@ public class MessageService {
 	public MessageResponse sendMessage(Long roomId, Long userId, SendMessageRequest request) {
 		Room room = verifyRoomMember(roomId, userId);
 		User sender = userService.getUser(userId);
+		String content = request.content() == null ? "" : request.content().trim();
+		List<Long> attachmentIds = request.attachmentIds() == null ? List.of() : request.attachmentIds();
+
+		if (content.isBlank() && attachmentIds.isEmpty()) {
+			throw new IllegalArgumentException("Message content or attachments required");
+		}
+
+		MessageType messageType = attachmentIds.isEmpty() ? MessageType.TEXT : MessageType.IMAGE_ALBUM;
+		List<StoredFile> attachmentFiles = fileService.getMessageAttachmentsForSend(userId, attachmentIds);
+
 		Message newMessage = Message.builder()
 			.room(room)
 			.sender(sender)
-			.content(request.content().trim())
+			.content(content)
+			.messageType(messageType)
 			.build();
 		Message message = messageRepository.save(Objects.requireNonNull(newMessage));
-		MessageResponse response = MessageResponse.from(message);
+
+		for (int index = 0; index < attachmentFiles.size(); index += 1) {
+			StoredFile file = attachmentFiles.get(index);
+			MessageAttachment attachment = MessageAttachment.builder()
+				.message(message)
+				.file(file)
+				.sortOrder(index)
+				.build();
+
+			messageAttachmentRepository.save(Objects.requireNonNull(attachment));
+		}
+
+		MessageResponse response = toMessageResponse(message, attachmentFiles);
 
 		roomReadStateService.markAsRead(roomId, userId, message.getId());
 		messageBroadcastService.broadcastMessage(response);
@@ -132,8 +162,53 @@ public class MessageService {
 			throw new IllegalArgumentException("Only the sender can delete a message for everyone");
 		}
 
+		List<StoredFile> attachmentFiles = messageAttachmentRepository.findByMessage_IdOrderBySortOrderAsc(messageId).stream()
+			.map(MessageAttachment::getFile)
+			.toList();
+
 		messageRepository.delete(message);
+
+		for (StoredFile file : attachmentFiles) {
+			try {
+				fileService.deleteStoredFile(file);
+			}
+			catch (java.io.IOException ex) {
+				throw new IllegalArgumentException("Failed to delete attachment file", ex);
+			}
+		}
+
 		messageBroadcastService.broadcastMessageDeleted(new MessageDeletedResponse(roomId, messageId));
+	}
+
+	private List<MessageResponse> toMessageResponses(List<Message> messages) {
+		if (messages.isEmpty()) {
+			return List.of();
+		}
+
+		List<Long> messageIds = messages.stream()
+			.map(Message::getId)
+			.toList();
+		Map<Long, List<FileResponse>> attachmentsByMessageId = messageAttachmentRepository
+			.findByMessage_IdInWithFile(messageIds).stream()
+			.collect(Collectors.groupingBy(
+				attachment -> attachment.getMessage().getId(),
+				Collectors.mapping(attachment -> FileResponse.from(attachment.getFile()), Collectors.toList())
+			));
+
+		return messages.stream()
+			.map(message -> MessageResponse.from(
+				message,
+				attachmentsByMessageId.getOrDefault(message.getId(), List.of())
+			))
+			.toList();
+	}
+
+	private MessageResponse toMessageResponse(Message message, List<StoredFile> attachmentFiles) {
+		List<FileResponse> attachments = attachmentFiles.stream()
+			.map(FileResponse::from)
+			.toList();
+
+		return MessageResponse.from(message, attachments);
 	}
 
 	private Message getMessageInRoom(Long roomId, Long messageId) {

@@ -9,6 +9,7 @@ public record RoomMemberResponse(
 	Long userId,
 	String displayName,
 	String email,
-	AuthProvider provider
+	AuthProvider provider,
+	Long avatarFileId
 ) {
 }

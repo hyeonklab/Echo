@@ -66,6 +66,9 @@ venv/
 *.ldf
 *.db
 *.sqlite
+# Local file uploads (echo.storage.root-path / ECHO_STORAGE_PATH)
+data/uploads/
+echo-server/data/uploads/
 
 # Understand-Anything (generated artifacts; keep knowledge-graph outputs)
 .understand-anything/intermediate/

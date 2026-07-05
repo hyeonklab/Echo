@@ -11,7 +11,8 @@ public record UserResponse(
 	Long id,
 	String email,
 	String displayName,
-	AuthProvider provider
+	AuthProvider provider,
+	Long avatarFileId
 ) {
 
 	/**
@@ -22,7 +23,8 @@ public record UserResponse(
 			principal.getUserId(),
 			principal.getEmail(),
 			principal.getDisplayName(),
-			principal.getProvider()
+			principal.getProvider(),
+			null
 		);
 	}
 
@@ -34,7 +36,8 @@ public record UserResponse(
 			user.getId(),
 			user.getEmail(),
 			user.getDisplayName(),
-			user.getProvider()
+			user.getProvider(),
+			user.getAvatarFile() == null ? null : user.getAvatarFile().getId()
 		);
 	}
 

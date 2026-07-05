@@ -12,6 +12,7 @@ public record FriendResponse(
 	String email,
 	String displayName,
 	String provider,
+	Long avatarFileId,
 	Instant addedAt,
 	boolean online
 ) {
@@ -25,6 +26,7 @@ public record FriendResponse(
 			friend.getFriend().getEmail(),
 			friend.getFriend().getDisplayName(),
 			friend.getFriend().getProvider().name(),
+			friend.getFriend().getAvatarFile() == null ? null : friend.getFriend().getAvatarFile().getId(),
 			friend.getCreatedAt(),
 			online
 		);

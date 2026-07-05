@@ -54,6 +54,14 @@ public class UserService {
 	}
 
 	/**
+	 * ID로 사용자 응답 DTO를 조회한다.
+	 */
+	@Transactional(readOnly = true)
+	public UserResponse getUserResponse(Long userId) {
+		return UserResponse.from(getUser(userId));
+	}
+
+	/**
 	 * 이름 또는 이메일로 사용자를 검색한다.
 	 */
 	@Transactional(readOnly = true)

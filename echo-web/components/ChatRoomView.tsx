@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+
+import MessageContent from "@/components/MessageContent";
 import { type SubmitEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { AuthUser, fetchSessionUser } from "@/lib/auth";
+import { AuthUser, requireSessionUser } from "@/lib/auth";
 import { Message, fetchMessages, sendMessage, type MemberReadState } from "@/lib/messages";
 import { formatUnreadCount, publishRoomReadEvent, publishRoomUpdateEvent, subscribeRoomUpdateEvents } from "@/lib/room-live";
 import { Room, canInviteToRoom, canRenameRoom, fetchRoom, formatRoomMemberSummary, getRoomDisplayName, inviteRoomMember, markRoomRead, updateRoomName } from "@/lib/rooms";
@@ -166,34 +168,38 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
 
   useEffect(() => {
     async function loadChatRoom() {
-      const user = await fetchSessionUser();
+      setLoading(true);
+      setErrorMessage(null);
 
-      if (!user) {
-        router.replace("/login");
-        return;
-      }
+      try {
+        const user = await requireSessionUser(router);
 
-      const [roomData, history] = await Promise.all([
-        fetchRoom(roomId),
-        fetchMessages(roomId),
-      ]);
+        if (!user) {
+          return;
+        }
 
-      if (!roomData || !history) {
-        setErrorMessage("채팅방을 불러오지 못했습니다.");
+        const [roomData, history] = await Promise.all([
+          fetchRoom(roomId),
+          fetchMessages(roomId),
+        ]);
+
+        if (!roomData || !history) {
+          setErrorMessage("채팅방을 불러오지 못했습니다.");
+          return;
+        }
+
+        setRoom(roomData);
+        setCurrentUser(user);
+        setMessages(history.messages);
+        setHasMore(history.hasMore);
+        setPeerLastReadMessageId(history.peerLastReadMessageId);
+        setMemberReadStates(history.memberReadStates ?? []);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      setRoom(roomData);
-      setCurrentUser(user);
-      setMessages(history.messages);
-      setHasMore(history.hasMore);
-      setPeerLastReadMessageId(history.peerLastReadMessageId);
-      setMemberReadStates(history.memberReadStates ?? []);
-      setLoading(false);
     }
 
-    loadChatRoom();
+    void loadChatRoom();
   }, [roomId, router]);
 
   useEffect(() => {
@@ -447,7 +453,11 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     return <p className="text-sm text-zinc-500">채팅방 불러오는 중...</p>;
   }
 
-  if (!room || !currentUser) {
+  if (!currentUser) {
+    return <p className="text-sm text-zinc-500">로그인 페이지로 이동 중...</p>;
+  }
+
+  if (!room) {
     return (
       <div className="space-y-4">
         <p className="text-sm text-red-600 dark:text-red-400">
@@ -651,7 +661,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
                         {message.senderDisplayName}
                       </p>
                     ) : null}
-                    <p className="whitespace-pre-wrap break-words text-sm">{message.content}</p>
+                    <MessageContent content={message.content} isMine={isMine} />
                     <p
                       className={`mt-1 text-[11px] ${
                         isMine ? "text-zinc-300 dark:text-zinc-500" : "text-zinc-400"

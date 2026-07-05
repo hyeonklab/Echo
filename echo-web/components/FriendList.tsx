@@ -4,7 +4,7 @@ import { type SubmitEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import OnlineStatusDot from "@/components/OnlineStatusDot";
-import { AuthUser, fetchSessionUser } from "@/lib/auth";
+import { AuthUser, requireSessionUser } from "@/lib/auth";
 import {
   Friend,
   addFriend,
@@ -61,22 +61,29 @@ export default function FriendList() {
 
   useEffect(() => {
     async function loadFriends() {
-      const user = await fetchSessionUser();
+      try {
+        const user = await requireSessionUser(router);
 
-      if (!user) {
-        router.replace("/login");
-        return;
+        if (!user) {
+          return;
+        }
+
+        const [friendList, onlineIds] = await Promise.all([fetchFriends(), fetchOnlineUserIds()]);
+
+        if (friendList === null) {
+          router.replace("/login");
+          return;
+        }
+
+        setCurrentUser(user);
+        setFriends(friendList);
+        setOnlineUserIds(onlineIds);
+      } finally {
+        setLoading(false);
       }
-
-      const [friendList, onlineIds] = await Promise.all([fetchFriends(), fetchOnlineUserIds()]);
-
-      setCurrentUser(user);
-      setFriends(friendList);
-      setOnlineUserIds(onlineIds);
-      setLoading(false);
     }
 
-    loadFriends();
+    void loadFriends();
   }, [router]);
 
   useEffect(() => {
@@ -186,7 +193,11 @@ export default function FriendList() {
     return <p className="p-4 text-sm text-zinc-500">친구 목록 불러오는 중...</p>;
   }
 
-  const isSelfOnline = currentUser ? onlineUserIds.has(currentUser.id) : false;
+  if (!currentUser) {
+    return <p className="p-4 text-sm text-zinc-500">로그인 페이지로 이동 중...</p>;
+  }
+
+  const isSelfOnline = onlineUserIds.has(currentUser.id);
 
   return (
     <div className="flex h-full flex-col overflow-hidden">

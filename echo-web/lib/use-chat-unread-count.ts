@@ -34,6 +34,12 @@ export function useChatUnreadCount(): number {
 
     const roomList = await fetchRooms();
 
+    if (!roomList) {
+      setCurrentUserId(null);
+      setRooms([]);
+      return;
+    }
+
     setCurrentUserId(user.id);
     setRooms(roomList);
   }, []);

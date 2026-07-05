@@ -1,4 +1,4 @@
-import { ensureAccessToken } from "@/lib/auth";
+import { ensureAccessToken, handleUnauthorized } from "@/lib/auth";
 import { apiFetch, getApiUrl } from "@/lib/api";
 
 export type Friend = {
@@ -47,11 +47,11 @@ async function readApiErrorMessage(response: Response): Promise<string> {
 /**
  * 내 친구 목록을 조회한다.
  */
-export async function fetchFriends(): Promise<Friend[]> {
+export async function fetchFriends(): Promise<Friend[] | null> {
   const token = await resolveAccessToken();
 
   if (!token) {
-    return [];
+    return null;
   }
 
   const response = await apiFetch(`${getApiUrl()}/api/friends`, {
@@ -60,6 +60,10 @@ export async function fetchFriends(): Promise<Friend[]> {
   });
 
   if (!response.ok) {
+    if (handleUnauthorized(response)) {
+      return null;
+    }
+
     return [];
   }
 

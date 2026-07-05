@@ -57,6 +57,13 @@ export default function MessageNotificationListener() {
 
     const roomList = await fetchRooms();
 
+    if (!roomList) {
+      setCurrentUser(null);
+      setRooms([]);
+      setEnabled(false);
+      return;
+    }
+
     setCurrentUser(user);
     setRooms(roomList);
     setEnabled(true);

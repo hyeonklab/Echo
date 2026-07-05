@@ -164,6 +164,43 @@ export async function fetchSessionUser(): Promise<AuthUser | null> {
   return fetchCurrentUser(accessToken);
 }
 
+type RouterLike = {
+  replace: (path: string) => void;
+};
+
+/**
+ * 세션 사용자를 조회하고 없으면 토큰을 제거한 뒤 로그인 페이지로 이동한다.
+ */
+export async function requireSessionUser(router: RouterLike): Promise<AuthUser | null> {
+  try {
+    const user = await fetchSessionUser();
+
+    if (!user) {
+      clearTokens();
+      router.replace("/login");
+      return null;
+    }
+
+    return user;
+  } catch {
+    clearTokens();
+    router.replace("/login");
+    return null;
+  }
+}
+
+/**
+ * 401 응답이면 저장된 토큰을 제거한다.
+ */
+export function handleUnauthorized(response: Response): boolean {
+  if (response.status !== 401) {
+    return false;
+  }
+
+  clearTokens();
+  return true;
+}
+
 async function refreshAndStore(refreshToken: string): Promise<string | null> {
   const tokens = await refreshAccessTokens(refreshToken);
 

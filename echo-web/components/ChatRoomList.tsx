@@ -4,7 +4,7 @@ import Link from "next/link";
 import { type SubmitEvent, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-import { AuthUser, fetchSessionUser } from "@/lib/auth";
+import { AuthUser, requireSessionUser } from "@/lib/auth";
 import {
   Room,
   createDmRoom,
@@ -62,24 +62,31 @@ export default function ChatRoomList({ mode = "page", activeRoomId = null }: Cha
 
   useEffect(() => {
     async function loadRooms() {
-      const user = await fetchSessionUser();
+      try {
+        const user = await requireSessionUser(router);
 
-      if (!user) {
-        router.replace("/login");
-        return;
+        if (!user) {
+          return;
+        }
+
+        const roomList = await fetchRooms();
+        const friendList = await fetchFriends();
+
+        if (roomList === null || friendList === null) {
+          router.replace("/login");
+          return;
+        }
+
+        setCurrentUser(user);
+        setRooms(roomList);
+        publishRoomsSnapshotEvent(roomList);
+        setFriendIds(new Set(friendList.map((friend) => friend.id)));
+      } finally {
+        setLoading(false);
       }
-
-      const roomList = await fetchRooms();
-      const friendList = await fetchFriends();
-
-      setCurrentUser(user);
-      setRooms(roomList);
-      publishRoomsSnapshotEvent(roomList);
-      setFriendIds(new Set(friendList.map((friend) => friend.id)));
-      setLoading(false);
     }
 
-    loadRooms();
+    void loadRooms();
   }, [router]);
 
   useEffect(() => {
@@ -270,6 +277,10 @@ export default function ChatRoomList({ mode = "page", activeRoomId = null }: Cha
 
   if (loading) {
     return <p className="p-4 text-sm text-zinc-500">채팅방 목록 불러오는 중...</p>;
+  }
+
+  if (!currentUser) {
+    return <p className="p-4 text-sm text-zinc-500">로그인 페이지로 이동 중...</p>;
   }
 
   const isPanel = mode === "panel";

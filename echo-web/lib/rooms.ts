@@ -1,4 +1,4 @@
-import { ensureAccessToken } from "@/lib/auth";
+import { ensureAccessToken, handleUnauthorized } from "@/lib/auth";
 import { apiFetch, getApiUrl } from "@/lib/api";
 
 export type RoomType = "GROUP" | "DM" | "SELF";
@@ -140,11 +140,11 @@ async function resolveAccessToken(): Promise<string | null> {
 /**
  * 내 채팅방 목록을 조회한다.
  */
-export async function fetchRooms(): Promise<Room[]> {
+export async function fetchRooms(): Promise<Room[] | null> {
   const token = await resolveAccessToken();
 
   if (!token) {
-    return [];
+    return null;
   }
 
   const response = await apiFetch(`${getApiUrl()}/api/rooms`, {
@@ -153,6 +153,10 @@ export async function fetchRooms(): Promise<Room[]> {
   });
 
   if (!response.ok) {
+    if (handleUnauthorized(response)) {
+      return null;
+    }
+
     return [];
   }
 

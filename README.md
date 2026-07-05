@@ -47,7 +47,6 @@ Discord/Slack 라이트 수준의 메신저로, 인증·채팅방·실시간 메
 | 실시간 메시지 | STOMP WebSocket 기반 송수신 |
 | 메시지 영속화 | PostgreSQL에 메시지 저장 및 히스토리 조회 |
 | 온라인 상태 | 접속/오프라인 표시 |
-| 타이핑 표시 | 상대방 입력 중 표시 |
 
 ### 선택 (Phase 2)
 
@@ -81,7 +80,7 @@ flowchart LR
 | 흐름 | 설명 |
 | :--- | :--- |
 | REST API | 회원가입·로그인, 채팅방 CRUD, 메시지 히스토리 조회 |
-| STOMP WebSocket | 실시간 메시지, 온라인 상태, 타이핑 인디케이터 |
+| STOMP WebSocket | 실시간 메시지, 온라인 상태 |
 | JWT | REST 및 WebSocket 연결 시 인증·인가 |
 
 ---

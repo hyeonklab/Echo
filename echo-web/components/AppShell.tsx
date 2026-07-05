@@ -35,18 +35,29 @@ export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isChatSection = pathname === "/chat" || pathname.startsWith("/chat/");
   const activeRoomId = resolveActiveRoomId(pathname);
+  const showMobileRoom = isChatSection && activeRoomId !== null;
 
   return (
     <div className="flex h-screen overflow-hidden bg-zinc-100 dark:bg-zinc-950">
       <AppSidebar />
 
       {isChatSection ? (
-        <aside className="flex w-80 shrink-0 flex-col overflow-hidden border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <aside
+          className={`flex min-w-0 shrink-0 flex-col overflow-hidden border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 ${
+            showMobileRoom ? "hidden md:flex md:w-80" : "flex flex-1 md:w-80 md:flex-none"
+          }`}
+        >
           <ChatRoomList mode="panel" activeRoomId={activeRoomId} />
         </aside>
       ) : null}
 
-      <main className="min-w-0 flex-1 overflow-hidden bg-white dark:bg-zinc-900">{children}</main>
+      <main
+        className={`min-w-0 flex-1 flex-col overflow-hidden bg-white dark:bg-zinc-900 ${
+          isChatSection && !showMobileRoom ? "hidden md:flex" : "flex"
+        }`}
+      >
+        {children}
+      </main>
     </div>
   );
 }

@@ -841,7 +841,14 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-start gap-3 border-b border-zinc-200 pb-4 dark:border-zinc-700">
+      <div className="flex shrink-0 items-start gap-2 border-b border-zinc-200 px-3 py-3 md:gap-3 md:px-4 md:pb-4 dark:border-zinc-700">
+        <Link
+          href="/chat"
+          aria-label="채팅 목록으로"
+          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-300 text-lg leading-none text-zinc-700 md:hidden dark:border-zinc-600 dark:text-zinc-200"
+        >
+          ‹
+        </Link>
         <RoomAvatar
           room={room}
           currentUserId={currentUser.id}
@@ -885,8 +892,8 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
               ) : null}
             </form>
           ) : (
-            <div className="mt-2 flex items-center gap-2">
-              <h2 className="truncate text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <h2 className="truncate text-lg font-semibold text-zinc-900 md:text-xl dark:text-zinc-50">
                 {getRoomDisplayName(room, currentUser.id)}
               </h2>
               {canRenameRoom(room.type) ? (
@@ -923,7 +930,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
       </div>
 
       {isInviting && canInviteToRoom(room.type) ? (
-        <section className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50">
+        <section className="mx-3 mt-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 md:mx-4 dark:border-zinc-700 dark:bg-zinc-800/50">
           <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">멤버 초대</h3>
           <p className="mt-1 text-xs text-zinc-500">이름 또는 이메일로 사용자를 검색해 초대하세요.</p>
           <form className="mt-3 flex flex-col gap-2 sm:flex-row" onSubmit={handleSearchInviteUsers}>
@@ -980,13 +987,13 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
       ) : null}
 
       {errorMessage ? (
-        <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+        <p className="mx-3 mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 md:mx-4 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
           {errorMessage}
         </p>
       ) : null}
 
       <div
-        className="relative mt-4 flex min-h-0 flex-1 flex-col rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50"
+        className="relative mx-3 mt-3 flex min-h-0 flex-1 flex-col rounded-xl border border-zinc-200 bg-zinc-50 md:mx-4 md:mt-4 dark:border-zinc-700 dark:bg-zinc-800/50"
         onDragEnter={handleAttachmentDragEnter}
         onDragLeave={handleAttachmentDragLeave}
         onDragOver={handleAttachmentDragOver}

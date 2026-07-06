@@ -19,6 +19,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Echo | 실시간 메신저",
   description: "Echo realtime messenger",
+  icons: {
+    icon: "/echo-logo-140.png",
+    apple: "/echo-logo-140.png",
+  },
 };
 
 export default function RootLayout({

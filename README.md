@@ -8,11 +8,11 @@
 
 ## 프로젝트 개요
 
-Discord/Slack 라이트 수준의 메신저로, 인증·채팅방·실시간 메시징·DB 영속화를 구현합니다.
+Discord/Slack 라이트 수준의 메신저로, 소셜 로그인·친구·채팅방·실시간 메시징·읽음 표시·파일 첨부를 구현합니다.
 
 | 항목 | 내용 |
 | :--- | :--- |
-| 유형 | 실시간 그룹 채팅 + 1:1 DM |
+| 유형 | 실시간 그룹 채팅 + 1:1 DM + 나와의 채팅 |
 | 저장소명 | `Echo` |
 | 백엔드 | Spring Boot 3 + Java |
 | 프론트엔드 | Next.js + React + TypeScript |
@@ -28,32 +28,69 @@ Discord/Slack 라이트 수준의 메신저로, 인증·채팅방·실시간 메
 | :--- | :--- | :--- |
 | Backend | Spring Boot | 3.5.x |
 | Language | Java | 17+ |
-| Frontend | Next.js | App Router |
-| UI | React + TypeScript | — |
+| Frontend | Next.js | 16.x (App Router) |
+| UI | React + TypeScript + Tailwind CSS | React 19 |
 | Database | PostgreSQL | 15+ (Docker 권장) |
+| Migration | Flyway | `echo-server/src/main/resources/db/migration` |
 | Realtime | Spring WebSocket + STOMP | `@stomp/stompjs` 클라이언트 |
-| Auth | Spring Security + JWT | Access Token 기반 |
+| Auth | Spring Security + JWT | Access / Refresh Token |
 
 ---
 
-## MVP 기능 범위
+## 구현 기능
 
-### 필수 (Phase 1)
-
-| 기능 | 설명 |
-| :--- | :--- |
-| 소셜 로그인 | Google / Naver OAuth2 + JWT (자체 회원가입 없음) |
-| 채팅방 | 생성 · 초대 · 목록 조회 |
-| 실시간 메시지 | STOMP WebSocket 기반 송수신 |
-| 메시지 영속화 | PostgreSQL에 메시지 저장 및 히스토리 조회 |
-| 온라인 상태 | 접속/오프라인 표시 |
-
-### 선택 (Phase 2)
+### 인증 · 사용자
 
 | 기능 | 설명 |
 | :--- | :--- |
-| 이미지 업로드 | 채팅 첨부 파일 |
-| 읽음 표시 | 메시지 읽음 여부 |
+| 소셜 로그인 | Google / Naver OAuth2 (자체 회원가입 없음) |
+| JWT | Access Token + Refresh Token, 자동 갱신 |
+| 프로필 | 표시 이름 변경, 프로필 사진 업로드·삭제 |
+| 사용자 검색 | 이름·이메일로 검색 (`GET /api/users/search`) |
+
+### 친구
+
+| 기능 | 설명 |
+| :--- | :--- |
+| 친구 목록 | 조회, 추가, 삭제 |
+| 온라인 상태 | STOMP presence + 친구 목록에 표시 |
+
+### 채팅방
+
+| 기능 | 설명 |
+| :--- | :--- |
+| 방 유형 | `GROUP` · `DM` · `SELF`(나와의 대화) |
+| 그룹방 | 생성, 이름 변경, 멤버 초대, 나가기, 방장 삭제 |
+| DM | 생성, **나만 삭제** / **양쪽 모두 삭제**, 숨김 후 상대 메시지 시 목록 복원 |
+| 목록 | 마지막 메시지 미리보기, 미읽음 수, 최근 활동 정렬 |
+| 나가기 알림 | `ROOM_LEAVE` 시스템 메시지, 멤버 목록 실시간 동기화 |
+
+### 메시지
+
+| 기능 | 설명 |
+| :--- | :--- |
+| 실시간 송수신 | STOMP 브로드캐스트 |
+| 히스토리 | 커서 기반 이전 메시지 조회 |
+| 유형 | `TEXT` · `IMAGE_ALBUM` · `ROOM_LEAVE` |
+| 이미지 첨부 | 다중 업로드, 앨범 그리드, 인증 기반 이미지 로드 |
+| 링크 미리보기 | URL OG 메타데이터 카드 (입력 중·메시지 본문) |
+| 삭제 | 나만 삭제 / 전체 삭제 |
+| 읽음 | 방별 읽음 상태, 미읽음 배지, 상대 읽음 위치 표시 |
+
+### 프론트엔드 UI
+
+| 기능 | 설명 |
+| :--- | :--- |
+| 앱 셸 | 좌측 아이콘 네비(홈·친구·채팅), 카카오톡 스타일 패널 레이아웃 |
+| 채팅 | 방 목록 + 채팅방 분리(모바일 대응), 브라우저 알림 |
+| 브랜딩 | `echo-web/public/echo-logo.png` 앱 로고·favicon |
+
+### 예정 / 미구현
+
+| 기능 | 설명 |
+| :--- | :--- |
+| 타이핑 표시 | 상대방 입력 중 표시 |
+| 푸시 알림 | 모바일·PWA 등 |
 
 ---
 
@@ -70,7 +107,7 @@ flowchart LR
         Auth[Spring_Security_JWT]
         DB[(PostgreSQL)]
     end
-    Next -->|auth_rooms_history| API
+    Next -->|auth_rooms_friends_files| API
     Next -->|realtime_msgs_presence| WS
     API --> Auth
     API --> DB
@@ -79,22 +116,58 @@ flowchart LR
 
 | 흐름 | 설명 |
 | :--- | :--- |
-| REST API | 소셜 로그인, 채팅방 CRUD, 메시지 히스토리 조회 |
-| STOMP WebSocket | 실시간 메시지, 온라인 상태 |
-| JWT | REST 및 WebSocket 연결 시 인증·인가 |
+| REST API | 인증, 사용자·친구·채팅방·메시지·파일·링크 미리보기 |
+| STOMP WebSocket | 실시간 메시지, 읽음, 방 메타/멤버십, 삭제, 온라인 상태 |
+| JWT | REST 및 WebSocket(`CONNECT`) 인증 |
+
+### STOMP 구독 토픽 (요약)
+
+| 토픽 | 용도 |
+| :--- | :--- |
+| `/topic/rooms/{roomId}/messages` | 새 메시지 |
+| `/topic/rooms/{roomId}/messages/deleted` | 메시지 삭제 |
+| `/topic/rooms/{roomId}/read` | 읽음 상태 |
+| `/topic/rooms/{roomId}/meta` | 방 이름 등 메타 변경 |
+| `/topic/users/{userId}/rooms` | 채팅방 목록 갱신(초대·DM 복원·멤버 변경) |
+| `/topic/users/{userId}/rooms/deleted` | 채팅방 삭제 알림 |
+| `/topic/presence` | 온라인 상태 |
 
 ---
 
 ## DB 스키마 개요
 
-| 테이블 | 주요 컬럼 | 설명 |
-| :--- | :--- | :--- |
-| `users` | `id`, `email`, `display_name`, `provider`, `provider_id`, `created_at` | 사용자 계정 (OAuth) |
-| `rooms` | `id`, `name`, `type`, `created_by`, `created_at` | 채팅방 (그룹 / DM) |
-| `room_members` | `room_id`, `user_id`, `joined_at` | 채팅방 참여자 |
-| `messages` | `id`, `room_id`, `sender_id`, `content`, `created_at` | 메시지 영속화 |
+Flyway 마이그레이션 `V1` ~ `V10` 기준입니다.
 
-> 상세 ERD 및 마이그레이션 스크립트는 구현 단계에서 추가 예정
+| 테이블 | 설명 |
+| :--- | :--- |
+| `users` | OAuth 사용자, `avatar_file_id` |
+| `rooms` | 채팅방 (`GROUP` / `DM` / `SELF`) |
+| `room_members` | 채팅방 참여자 |
+| `room_hidden` | DM 나만 삭제 시 사용자별 방 숨김 |
+| `room_read_states` | 방별 마지막 읽은 메시지 |
+| `messages` | 메시지 (`message_type`: `TEXT`, `IMAGE_ALBUM`, `ROOM_LEAVE`) |
+| `message_hidden` | 메시지 나만 삭제 |
+| `message_attachments` | 메시지 이미지 첨부 |
+| `stored_files` | 업로드 파일 메타데이터 |
+| `friends` | 친구 관계 |
+
+상세 DDL: `echo-server/src/main/resources/db/migration/`
+
+---
+
+## REST API 개요
+
+| 경로 | 설명 |
+| :--- | :--- |
+| `GET /api/health` | 헬스 체크 |
+| `GET/POST /api/auth/*` | me, exchange, refresh, logout |
+| `GET/PATCH/POST/DELETE /api/users/*` | 검색, 프로필, 아바타 |
+| `GET/POST/DELETE /api/friends/*` | 친구 |
+| `GET/POST/PATCH/POST /api/rooms/*` | 목록, 생성, DM, 초대, 읽음, 이름, 나가기 |
+| `GET/POST/DELETE /api/rooms/{id}/messages` | 메시지 |
+| `POST/GET /api/files/*` | 업로드, 다운로드 |
+| `GET /api/link-preview` | 링크 미리보기 |
+| `GET /api/presence/online` | 온라인 사용자 ID 목록 |
 
 ---
 
@@ -104,23 +177,40 @@ flowchart LR
 Echo/
   README.md
   docker-compose.yml
-  echo-server/              # Spring Boot API + STOMP
+  .env.example
+  echo-server/                 # Spring Boot API + STOMP
     src/main/java/com/echo/
-      EchoApplication.java
       config/
       controller/
       domain/
+      dto/
       repository/
       service/
       websocket/
     src/main/resources/
       application.yml
-  echo-web/                 # Next.js + TypeScript
+      db/migration/            # Flyway V1~V10
+  echo-web/                    # Next.js + TypeScript
     app/
+      (shell)/                 # 홈, 로그인, 친구, 채팅
+      auth/callback/
     components/
-    lib/
-    package.json
+    lib/                       # api, auth, rooms, messages, stomp, ...
+    public/
+      echo-logo.png
+      echo-logo-140.png
 ```
+
+### 프론트 주요 경로
+
+| 경로 | 설명 |
+| :--- | :--- |
+| `/` | 루트 리다이렉트 |
+| `/login` | 소셜 로그인 |
+| `/home` | 홈·계정 |
+| `/friends` | 친구 목록·추가 |
+| `/chat` | 채팅방 목록 |
+| `/chat/{roomId}` | 채팅방 |
 
 ---
 
@@ -188,6 +278,7 @@ mvnw.cmd spring-boot:run
 
 - API: `http://localhost:8080`
 - 헬스 체크: `GET http://localhost:8080/api/health`
+- WebSocket: `http://localhost:8080/ws` (SockJS + STOMP)
 
 ### 3. 프론트엔드
 
@@ -202,7 +293,7 @@ npm run dev
 
 ---
 
-## 인증 (Phase 1)
+## 인증
 
 Google / Naver **소셜 로그인**만 지원합니다. 자체 이메일·비밀번호 회원가입은 제공하지 않습니다.
 

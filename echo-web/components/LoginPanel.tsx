@@ -1,4 +1,5 @@
 import { getOAuthLoginUrl, IS_NAVER_LOGIN_ENABLED } from "@/lib/auth";
+import AppLogo from "@/components/AppLogo";
 
 type LoginPanelProps = {
   errorCode?: string | null;
@@ -27,7 +28,10 @@ export default function LoginPanel({ errorCode = null }: Readonly<LoginPanelProp
 
   return (
     <div className="mt-6 max-w-md space-y-4 rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-800/50">
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">소셜 계정으로 Echo에 로그인합니다.</p>
+      <div className="flex flex-col items-center gap-3 pb-1 text-center">
+        <AppLogo size={72} href={null} />
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">소셜 계정으로 Echo에 로그인합니다.</p>
+      </div>
 
       {errorMessage ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">

@@ -209,14 +209,66 @@ export default function FriendList() {
         </p>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-        <div className="w-full max-w-xl space-y-4">
-          {errorMessage ? (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
-              {errorMessage}
-            </p>
-          ) : null}
+      <div className="shrink-0 border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
+        {errorMessage ? (
+          <p className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+            {errorMessage}
+          </p>
+        ) : null}
 
+        <details className="overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-zinc-700 dark:text-zinc-200">
+            친구 추가
+          </summary>
+          <div className="space-y-3 border-t border-zinc-200 px-4 py-3 dark:border-zinc-700">
+            <form className="flex gap-2" onSubmit={handleSearchUsers}>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="이름 또는 이메일"
+                className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+                disabled={submitting || searching}
+              />
+              <button
+                type="submit"
+                disabled={submitting || searching || searchQuery.trim().length < 2}
+                className="shrink-0 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+              >
+                {searching ? "검색 중..." : "검색"}
+              </button>
+            </form>
+
+            {searchResults.length > 0 ? (
+              <ul className="divide-y divide-zinc-200 overflow-hidden rounded-lg border border-zinc-200 dark:divide-zinc-700 dark:border-zinc-700">
+                {searchResults.map((user) => {
+                  const isFriend = friendIdSet.has(user.id);
+
+                  return (
+                    <li key={user.id} className="flex items-center gap-3 bg-white px-3 py-2 dark:bg-zinc-900">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">{user.displayName}</p>
+                        <p className="truncate text-xs text-zinc-500">{user.email ?? "이메일 없음"}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAddFriend(user)}
+                        disabled={submitting || isFriend}
+                        className="shrink-0 rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                      >
+                        {isFriend ? "추가됨" : "추가"}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+          </div>
+        </details>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+        <div className="w-full max-w-xl">
           <section className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
             <h2 className="border-b border-zinc-200 bg-zinc-50 px-4 py-2 text-xs font-semibold text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/50">
               친구 목록
@@ -301,56 +353,6 @@ export default function FriendList() {
               )}
             </ul>
           </section>
-
-          <details className="overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50">
-            <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-zinc-700 dark:text-zinc-200">
-              친구 추가
-            </summary>
-            <div className="space-y-3 border-t border-zinc-200 px-4 py-3 dark:border-zinc-700">
-              <form className="flex gap-2" onSubmit={handleSearchUsers}>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="이름 또는 이메일"
-                  className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
-                  disabled={submitting || searching}
-                />
-                <button
-                  type="submit"
-                  disabled={submitting || searching || searchQuery.trim().length < 2}
-                  className="shrink-0 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-                >
-                  {searching ? "검색 중..." : "검색"}
-                </button>
-              </form>
-
-              {searchResults.length > 0 ? (
-                <ul className="divide-y divide-zinc-200 overflow-hidden rounded-lg border border-zinc-200 dark:divide-zinc-700 dark:border-zinc-700">
-                  {searchResults.map((user) => {
-                    const isFriend = friendIdSet.has(user.id);
-
-                    return (
-                      <li key={user.id} className="flex items-center gap-3 bg-white px-3 py-2 dark:bg-zinc-900">
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">{user.displayName}</p>
-                          <p className="truncate text-xs text-zinc-500">{user.email ?? "이메일 없음"}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleAddFriend(user)}
-                          disabled={submitting || isFriend}
-                          className="shrink-0 rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                        >
-                          {isFriend ? "추가됨" : "추가"}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : null}
-            </div>
-          </details>
 
           {pendingDeleteFriend ? (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">

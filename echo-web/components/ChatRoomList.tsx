@@ -744,16 +744,16 @@ export default function ChatRoomList({ mode = "page", activeRoomId = null }: Cha
           <header className="shrink-0 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
             <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">채팅</h1>
           </header>
+          <div className="shrink-0 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
+            <details className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800/50">
+              <summary className="cursor-pointer text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                새 채팅 만들기
+              </summary>
+              <div className="mt-3 space-y-4">{createSections}</div>
+            </details>
+          </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-            <div className="space-y-4">
-              {roomListSection}
-              <details className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800/50">
-                <summary className="cursor-pointer text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                  새 채팅 만들기
-                </summary>
-                <div className="mt-3 space-y-4">{createSections}</div>
-              </details>
-            </div>
+            {roomListSection}
           </div>
         </>
       ) : (

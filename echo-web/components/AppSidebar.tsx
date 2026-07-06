@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import AppLogo from "@/components/AppLogo";
 import { formatUnreadCount } from "@/lib/room-live";
 import { useChatUnreadCount } from "@/lib/use-chat-unread-count";
 
@@ -54,6 +55,7 @@ export default function AppSidebar() {
 
   return (
     <aside className="flex w-[72px] shrink-0 flex-col items-center border-r border-zinc-200 bg-zinc-100 py-4 dark:border-zinc-800 dark:bg-zinc-950">
+      <AppLogo size={40} href="/home" className="mb-4" />
       <nav className="flex flex-col items-center gap-3">
         <SidebarItem href="/home" label="홈" active={isHome}>
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">

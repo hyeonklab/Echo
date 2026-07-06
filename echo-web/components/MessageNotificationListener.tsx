@@ -13,9 +13,40 @@ import {
   showMessageNotification,
 } from "@/lib/notifications";
 import { Room, fetchRooms, getRoomDisplayName } from "@/lib/rooms";
-import { publishRoomMessageDeletedEvent, publishRoomMessageEvent, publishRoomReadEvent, publishRoomUpdateEvent, toRoomFromMetaUpdate, type RoomReadEvent } from "@/lib/room-live";
-import { subscribeRoomsMessageDeletes, subscribeRoomsMessages, subscribeRoomsMeta, subscribeRoomsReads } from "@/lib/stomp";
+import {
+  publishRoomMessageDeletedEvent,
+  publishRoomMessageEvent,
+  publishRoomReadEvent,
+  publishRoomsSnapshotEvent,
+  publishRoomUpdateEvent,
+  subscribeRoomsSnapshotEvents,
+  toRoomFromMetaUpdate,
+  type RoomReadEvent,
+} from "@/lib/room-live";
+import {
+  subscribeRoomsMessageDeletes,
+  subscribeRoomsMessages,
+  subscribeRoomsMeta,
+  subscribeRoomsReads,
+  subscribeUserRoomMembership,
+} from "@/lib/stomp";
 import type { RoomMetaUpdate } from "@/lib/stomp";
+
+/**
+ * 채팅방 목록에 신규/갱신 방 정보를 병합한다.
+ */
+function mergeRoomList(rooms: Room[], incoming: Room): Room[] {
+  const existingIndex = rooms.findIndex((room) => room.id === incoming.id);
+
+  if (existingIndex < 0) {
+    return [incoming, ...rooms];
+  }
+
+  const next = [...rooms];
+  next[existingIndex] = { ...next[existingIndex], ...incoming };
+
+  return next;
+}
 
 /**
  * 로그인 사용자의 모든 채팅방 메시지를 구독하고 브라우저 알림을 표시한다.
@@ -90,6 +121,27 @@ export default function MessageNotificationListener() {
       globalThis.document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [loadNotificationContext, pathname]);
+
+  useEffect(() => {
+    return subscribeRoomsSnapshotEvents((snapshot) => {
+      setRooms(snapshot);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    return subscribeUserRoomMembership(currentUser.id, (room) => {
+      setRooms((prev) => {
+        const next = mergeRoomList(prev, room);
+        publishRoomsSnapshotEvent(next);
+
+        return next;
+      });
+    });
+  }, [currentUser]);
 
   useEffect(() => {
     if (!enabled || !currentUser || rooms.length === 0) {

@@ -103,6 +103,10 @@ public class RoomService {
 
 				User member = userService.getUser(memberUserId);
 				addMember(room, member);
+				roomBroadcastService.broadcastRoomMembershipUpdated(
+					memberUserId,
+					toRoomResponse(room, memberUserId)
+				);
 			}
 		}
 
@@ -136,6 +140,9 @@ public class RoomService {
 
 		addMember(room, currentUser);
 		addMember(room, targetUser);
+
+		RoomResponse targetResponse = toRoomResponse(room, request.targetUserId());
+		roomBroadcastService.broadcastRoomMembershipUpdated(request.targetUserId(), targetResponse);
 
 		return toRoomResponse(room, userId);
 	}
@@ -181,6 +188,9 @@ public class RoomService {
 
 		User member = userService.getUser(request.userId());
 		addMember(room, member);
+
+		RoomResponse inviteeResponse = toRoomResponse(room, request.userId());
+		roomBroadcastService.broadcastRoomMembershipUpdated(request.userId(), inviteeResponse);
 
 		return toRoomResponse(room, requesterUserId);
 	}

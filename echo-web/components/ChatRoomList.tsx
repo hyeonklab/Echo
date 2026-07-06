@@ -19,7 +19,7 @@ import {
 } from "@/lib/rooms";
 import { SearchUser, getProviderLabel, searchUsers } from "@/lib/users";
 import { addFriend, fetchFriends, resolveAddFriendErrorMessage } from "@/lib/friends";
-import { applyIncomingMessageToRooms, applyMessageDeletedToRooms, applyRoomReadToRooms, applyRoomUpdateToRooms, formatUnreadCount, getViewingRoomId, publishRoomsSnapshotEvent, subscribeRoomMessageDeletedEvents, subscribeRoomMessageEvents, subscribeRoomReadEvents, subscribeRoomUpdateEvents } from "@/lib/room-live";
+import { applyIncomingMessageToRooms, applyMessageDeletedToRooms, applyRoomReadToRooms, applyRoomUpdateToRooms, formatUnreadCount, getViewingRoomId, publishRoomsSnapshotEvent, subscribeRoomMessageDeletedEvents, subscribeRoomMessageEvents, subscribeRoomReadEvents, subscribeRoomUpdateEvents, subscribeRoomsSnapshotEvents } from "@/lib/room-live";
 import { getNotificationUnavailableReason } from "@/lib/notifications";
 
 /**
@@ -89,6 +89,12 @@ export default function ChatRoomList({ mode = "page", activeRoomId = null }: Cha
 
     void loadRooms();
   }, [router]);
+
+  useEffect(() => {
+    return subscribeRoomsSnapshotEvents((snapshot) => {
+      setRooms(snapshot);
+    });
+  }, []);
 
   useEffect(() => {
     const viewingRoomId = getViewingRoomId(pathname);

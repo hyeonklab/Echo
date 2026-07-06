@@ -5,6 +5,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.echo.dto.RoomMetaUpdateResponse;
+import com.echo.dto.RoomResponse;
 import com.echo.domain.Room;
 
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,15 @@ public class RoomBroadcastService {
 		String destination = "/topic/rooms/" + room.getId() + "/meta";
 
 		messagingTemplate.convertAndSend(destination, RoomMetaUpdateResponse.from(room));
+	}
+
+	/**
+	 * 사용자에게 채팅방 참여 변경을 전송한다.
+	 */
+	public void broadcastRoomMembershipUpdated(Long userId, RoomResponse room) {
+		String destination = "/topic/users/" + userId + "/rooms";
+
+		messagingTemplate.convertAndSend(destination, room);
 	}
 
 }

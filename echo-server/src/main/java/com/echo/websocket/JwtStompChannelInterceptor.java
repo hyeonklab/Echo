@@ -34,7 +34,8 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
 
 	private static final String AUTHORIZATION_HEADER = "Authorization";
 	private static final String BEARER_PREFIX = "Bearer ";
-	private static final Pattern ROOM_TOPIC_PATTERN = Pattern.compile("^/topic/rooms/(\\d+)/(messages|read|meta)$");
+	private static final Pattern ROOM_TOPIC_PATTERN = Pattern.compile("^/topic/rooms/(\\d+)/(messages(?:/deleted)?|read|meta)$");
+	private static final Pattern USER_ROOM_TOPIC_PATTERN = Pattern.compile("^/topic/users/(\\d+)/rooms$");
 	private static final String PRESENCE_TOPIC = "/topic/presence";
 
 	private final JwtTokenProvider jwtTokenProvider;
@@ -95,6 +96,16 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
 			return;
 		}
 
+		Long userRoomTopicUserId = parseUserRoomTopicUserId(destination);
+
+		if (userRoomTopicUserId != null) {
+			if (!userRoomTopicUserId.equals(principal.getUserId())) {
+				throw new AccessDeniedException("User topic access denied");
+			}
+
+			return;
+		}
+
 		Long roomId = parseRoomTopicRoomId(destination);
 
 		if (roomId == null) {
@@ -123,6 +134,21 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
 		}
 
 		Matcher matcher = ROOM_TOPIC_PATTERN.matcher(destination);
+
+		if (!matcher.matches()) {
+			return null;
+		}
+
+		return Long.parseLong(matcher.group(1));
+	}
+
+	@Nullable
+	private Long parseUserRoomTopicUserId(@Nullable String destination) {
+		if (destination == null) {
+			return null;
+		}
+
+		Matcher matcher = USER_ROOM_TOPIC_PATTERN.matcher(destination);
 
 		if (!matcher.matches()) {
 			return null;

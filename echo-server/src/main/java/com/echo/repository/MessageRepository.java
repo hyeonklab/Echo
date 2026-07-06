@@ -91,6 +91,10 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 		WHERE m.room.id = :roomId
 		AND m.sender.id <> :userId
 		AND m.id > :afterMessageId
+		AND NOT EXISTS (
+			SELECT 1 FROM MessageHidden mh
+			WHERE mh.message.id = m.id AND mh.user.id = :userId
+		)
 		""")
 	long countUnreadAfter(
 		@Param("roomId") Long roomId,
@@ -106,6 +110,12 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 		WHERE m.room_id IN (:roomIds)
 			AND m.sender_id <> :userId
 			AND m.id > COALESCE(rrs.last_read_message_id, 0)
+			AND NOT EXISTS (
+				SELECT 1
+				FROM message_hidden mh
+				WHERE mh.message_id = m.id
+					AND mh.user_id = :userId
+			)
 		GROUP BY m.room_id
 		""", nativeQuery = true)
 	List<Object[]> countUnreadByRoomIds(@Param("userId") Long userId, @Param("roomIds") Collection<Long> roomIds);

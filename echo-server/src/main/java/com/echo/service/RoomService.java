@@ -51,6 +51,7 @@ public class RoomService {
 	private final RoomReadStateService roomReadStateService;
 	private final UserService userService;
 	private final RoomBroadcastService roomBroadcastService;
+	private final RoomLeaveMessageService roomLeaveMessageService;
 
 	@PersistenceContext
 	private EntityManager entityManager;
@@ -294,6 +295,7 @@ public class RoomService {
 				return;
 			}
 
+			roomLeaveMessageService.sendMemberLeftMessage(room, userId);
 			hideRoomForUser(room, userId);
 			return;
 		}
@@ -304,11 +306,15 @@ public class RoomService {
 			return;
 		}
 
+		roomLeaveMessageService.sendMemberLeftMessage(room, userId);
 		roomMemberRepository.deleteByRoom_IdAndUser_Id(roomId, userId);
 
 		if (roomMemberRepository.countByRoom_Id(roomId) == 0) {
 			purgeRoom(roomId);
+			return;
 		}
+
+		notifyRoomMembershipUpdatedToRemaining(room, userId);
 	}
 
 	private Room getRoomForMember(Long roomId, Long userId) {
@@ -471,6 +477,38 @@ public class RoomService {
 				roomBroadcastService.broadcastRoomDeleted(entry.getKey(), roomId);
 			}
 		}
+	}
+
+	/**
+	 * 멤버 나가기 후 남은 참여자에게 갱신된 채팅방 정보를 전송한다.
+	 */
+	private void notifyRoomMembershipUpdatedToRemaining(Room room, Long excludedUserId) {
+		List<Long> memberUserIds = roomMemberRepository.findUserIdsByRoomId(room.getId()).stream()
+			.filter(memberUserId -> !memberUserId.equals(excludedUserId))
+			.toList();
+
+		if (memberUserIds.isEmpty()) {
+			return;
+		}
+
+		Runnable broadcast = () -> {
+			for (Long memberUserId : memberUserIds) {
+				RoomResponse response = toRoomResponse(room, memberUserId);
+				roomBroadcastService.broadcastRoomMembershipUpdated(memberUserId, response);
+			}
+		};
+
+		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+			broadcast.run();
+			return;
+		}
+
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				broadcast.run();
+			}
+		});
 	}
 
 	private String normalizeDeleteScope(String scope) {

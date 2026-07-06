@@ -6,7 +6,7 @@ import LinkPreviewCard from "@/components/LinkPreviewCard";
 import MessageContent from "@/components/MessageContent";
 import RoomAvatar from "@/components/RoomAvatar";
 import UserAvatar from "@/components/UserAvatar";
-import { type ChangeEvent, type DragEvent, type MouseEvent, type SubmitEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, type DragEvent, type MouseEvent, type SubmitEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AuthUser, requireSessionUser } from "@/lib/auth";
@@ -22,7 +22,7 @@ import {
 } from "@/lib/messages";
 import { formatUnreadCount, publishRoomMessageDeletedEvent, publishRoomReadEvent, publishRoomUpdateEvent, publishRoomLeftEvent, subscribeRoomLeftEvents, subscribeRoomUpdateEvents } from "@/lib/room-live";
 import { Room, canInviteToRoom, canRenameRoom, deleteRoom, fetchRoom, formatRoomMemberSummary, getLeaveRoomConfirmText, getLeaveRoomLabel, getRoomDisplayName, getRoomMember, inviteRoomMember, markRoomRead, requiresDmLeaveScopeChoice, resolveRoomDeleteScope, updateRoomName, type RoomDeleteScope } from "@/lib/rooms";
-import { subscribeRoomMessageDeletes, subscribeRoomMessages, subscribeRoomRead } from "@/lib/stomp";
+import { subscribeRoomMessageDeletes, subscribeRoomMessages, subscribeRoomRead, subscribeUserRoomMembership } from "@/lib/stomp";
 import { SearchUser, getProviderLabel, searchUsers } from "@/lib/users";
 
 type ChatRoomViewProps = {
@@ -215,17 +215,54 @@ function getOwnMessageUnreadCount(
   return formatUnreadCount(unreadCount);
 }
 
+const SCROLL_BOTTOM_THRESHOLD = 80;
+const FORCE_STICK_TO_BOTTOM_MS = 5000;
+
+/**
+ * 메시지 목록 스크롤을 맨 아래로 이동한다.
+ */
+function scrollMessagesToBottom(
+  container: HTMLDivElement | null,
+  ignoreScrollEventsRef: { current: boolean },
+) {
+  if (!container) {
+    return;
+  }
+
+  ignoreScrollEventsRef.current = true;
+  container.scrollTop = container.scrollHeight;
+  requestAnimationFrame(() => {
+    container.scrollTop = container.scrollHeight;
+    requestAnimationFrame(() => {
+      ignoreScrollEventsRef.current = false;
+    });
+  });
+}
+
+/**
+ * 메시지 목록이 하단 근처인지 확인한다.
+ */
+function isNearScrollBottom(container: HTMLDivElement, threshold = SCROLL_BOTTOM_THRESHOLD) {
+  return container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
+}
+
 /**
  * 채팅방 메시지 목록 및 입력 UI.
  */
 export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   const router = useRouter();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
+  const messagesContentRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
   const pendingAttachmentKeyRef = useRef(0);
   const attachmentDragDepthRef = useRef(0);
   const lastMarkedMessageIdRef = useRef<number | null>(null);
+  const lastTrackedMessageIdRef = useRef<number | null>(null);
+  const stickToBottomRef = useRef(true);
+  const forceStickToBottomUntilRef = useRef(0);
+  const ignoreScrollEventsRef = useRef(false);
+  const refocusInputAfterSendRef = useRef(false);
   const [room, setRoom] = useState<Room | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -269,6 +306,9 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     setHasMore(false);
     setPeerLastReadMessageId(null);
     setMemberReadStates([]);
+    stickToBottomRef.current = true;
+    forceStickToBottomUntilRef.current = Date.now() + FORCE_STICK_TO_BOTTOM_MS;
+    lastTrackedMessageIdRef.current = null;
     setPendingAttachments((prev) => {
       for (const attachment of prev) {
         URL.revokeObjectURL(attachment.previewUrl);
@@ -321,8 +361,44 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
 
     return subscribeRoomMessages(roomId, (message) => {
       setMessages((prev) => appendMessage(prev, message));
+
+      if (message.messageType !== "ROOM_LEAVE") {
+        return;
+      }
+
+      setRoom((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        const members = prev.members.filter((member) => member.userId !== message.senderId);
+
+        if (members.length === prev.members.length) {
+          return prev;
+        }
+
+        const updatedRoom = { ...prev, members };
+        publishRoomUpdateEvent(updatedRoom);
+
+        return updatedRoom;
+      });
     });
   }, [roomId, loading]);
+
+  useEffect(() => {
+    if (loading || !currentUser) {
+      return;
+    }
+
+    return subscribeUserRoomMembership(currentUser.id, (updatedRoom) => {
+      if (updatedRoom.id !== roomId) {
+        return;
+      }
+
+      setRoom((prev) => (prev ? { ...prev, ...updatedRoom } : prev));
+      publishRoomUpdateEvent(updatedRoom);
+    });
+  }, [currentUser, loading, roomId]);
 
   useEffect(() => {
     if (loading) {
@@ -463,13 +539,126 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     });
   }, [roomId, router]);
 
+  function shouldAutoScrollToBottom() {
+    const container = messagesScrollRef.current;
+
+    if (!container) {
+      return false;
+    }
+
+    if (Date.now() < forceStickToBottomUntilRef.current) {
+      return true;
+    }
+
+    return stickToBottomRef.current || isNearScrollBottom(container);
+  }
+
+  const handleMessageMediaLoaded = useCallback(() => {
+    const container = messagesScrollRef.current;
+
+    if (!container || !shouldAutoScrollToBottom()) {
+      return;
+    }
+
+    stickToBottomRef.current = true;
+    scrollMessagesToBottom(container, ignoreScrollEventsRef);
+  }, []);
+
   function focusMessageInput() {
-    messageInputRef.current?.focus({ preventScroll: true });
+    requestAnimationFrame(() => {
+      messageInputRef.current?.focus({ preventScroll: true });
+    });
   }
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
-  }, [messages]);
+    if (!sendingMessage && refocusInputAfterSendRef.current) {
+      refocusInputAfterSendRef.current = false;
+      focusMessageInput();
+    }
+  }, [sendingMessage]);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    stickToBottomRef.current = true;
+    forceStickToBottomUntilRef.current = Date.now() + FORCE_STICK_TO_BOTTOM_MS;
+    scrollMessagesToBottom(messagesScrollRef.current, ignoreScrollEventsRef);
+    requestAnimationFrame(() => {
+      scrollMessagesToBottom(messagesScrollRef.current, ignoreScrollEventsRef);
+    });
+  }, [loading, roomId]);
+
+  useEffect(() => {
+    if (loading || messages.length === 0) {
+      return;
+    }
+
+    const lastMessageId = messages.at(-1)?.id ?? null;
+
+    if (lastMessageId === lastTrackedMessageIdRef.current) {
+      return;
+    }
+
+    lastTrackedMessageIdRef.current = lastMessageId;
+
+    if (!stickToBottomRef.current) {
+      return;
+    }
+
+    scrollMessagesToBottom(messagesScrollRef.current, ignoreScrollEventsRef);
+    requestAnimationFrame(() => {
+      scrollMessagesToBottom(messagesScrollRef.current, ignoreScrollEventsRef);
+    });
+  }, [messages, loading]);
+
+  useEffect(() => {
+    const container = messagesScrollRef.current;
+
+    if (!container || loading) {
+      return;
+    }
+
+    function handleScroll() {
+      if (ignoreScrollEventsRef.current) {
+        return;
+      }
+
+      stickToBottomRef.current = isNearScrollBottom(container);
+    }
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, [loading, roomId]);
+
+  useEffect(() => {
+    const content = messagesContentRef.current;
+
+    if (!content || loading) {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      const container = messagesScrollRef.current;
+
+      if (!container || !shouldAutoScrollToBottom()) {
+        return;
+      }
+
+      stickToBottomRef.current = true;
+      scrollMessagesToBottom(container, ignoreScrollEventsRef);
+    });
+
+    observer.observe(content);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [loading, roomId]);
 
   async function handleLoadMore() {
     if (loadingMore || !hasMore || messages.length === 0) {
@@ -607,6 +796,10 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   }
 
   function handleOpenMessageMenu(event: MouseEvent<HTMLDivElement>, message: Message) {
+    if (message.messageType === "ROOM_LEAVE") {
+      return;
+    }
+
     event.preventDefault();
 
     setMessageMenu({
@@ -839,6 +1032,8 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     setMessageInput("");
     setPendingAttachments([]);
     setSendingMessage(true);
+    stickToBottomRef.current = true;
+    refocusInputAfterSendRef.current = true;
     focusMessageInput();
 
     void (async () => {
@@ -880,8 +1075,8 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
         setMessageInput(contentToSend);
         setErrorMessage("메시지 전송 중 오류가 발생했습니다.");
       } finally {
+        refocusInputAfterSendRef.current = true;
         setSendingMessage(false);
-        focusMessageInput();
       }
     })();
   }
@@ -939,7 +1134,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
         />
         <div className="min-w-0 flex-1">
           {isRenaming ? (
-            <form className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center" onSubmit={handleSaveRename}>
+            <form className="mt-2 flex flex-col gap-2" onSubmit={handleSaveRename}>
               <input
                 type="text"
                 value={renameInput}
@@ -952,11 +1147,11 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
                 disabled={renamingSubmitting}
                 autoFocus
               />
-              <div className="flex gap-2">
+              <div className="flex shrink-0 justify-end gap-2">
                 <button
                   type="submit"
                   disabled={renamingSubmitting || !renameInput.trim()}
-                  className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+                  className="shrink-0 whitespace-nowrap rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
                 >
                   {renamingSubmitting ? "저장 중..." : "저장"}
                 </button>
@@ -964,7 +1159,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
                   type="button"
                   onClick={handleCancelRename}
                   disabled={renamingSubmitting}
-                  className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  className="shrink-0 whitespace-nowrap rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
                 >
                   취소
                 </button>
@@ -1096,7 +1291,8 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
             </p>
           </div>
         ) : null}
-        <div className="flex-1 space-y-3 overflow-y-auto p-4">
+        <div ref={messagesScrollRef} className="flex-1 overflow-y-auto p-4">
+          <div ref={messagesContentRef} className="space-y-3">
           {hasMore ? (
             <div className="flex justify-center">
               <button
@@ -1114,6 +1310,16 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
             <p className="text-center text-sm text-zinc-500">아직 메시지가 없습니다. 첫 메시지를 보내 보세요.</p>
           ) : (
             messages.map((message, index) => {
+              if (message.messageType === "ROOM_LEAVE") {
+                return (
+                  <div key={message.id} className="flex justify-center py-1">
+                    <p className="rounded-full bg-zinc-200 px-3 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                      {message.content}
+                    </p>
+                  </div>
+                );
+              }
+
               const isMine = message.senderId === currentUser.id;
               const prevMessage = index > 0 ? messages[index - 1] : null;
               const showSenderAvatar =
@@ -1164,6 +1370,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
                       content={message.content}
                       attachments={message.attachments ?? []}
                       isMine={isMine}
+                      onMediaLoad={handleMessageMediaLoaded}
                     />
                     <p
                       className={`mt-1 text-[11px] ${
@@ -1177,7 +1384,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
               );
             })
           )}
-          <div ref={messagesEndRef} />
+          </div>
         </div>
 
         {draftPreviewUrl ? (
@@ -1242,7 +1449,6 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
             placeholder="메시지를 입력하세요"
             className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
             autoFocus
-            disabled={sendingMessage}
           />
           <button
             type="submit"

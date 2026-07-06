@@ -14,6 +14,7 @@ type LinkPreviewCardProps = {
   url: string;
   isMine?: boolean;
   debounceMs?: number;
+  onMediaLoad?: () => void;
 };
 
 /**
@@ -23,6 +24,7 @@ export default function LinkPreviewCard({
   url,
   isMine = false,
   debounceMs = 0,
+  onMediaLoad,
 }: Readonly<LinkPreviewCardProps>) {
   const [debouncedUrl, setDebouncedUrl] = useState(url);
   const [preview, setPreview] = useState<LinkPreview | null>(null);
@@ -58,6 +60,7 @@ export default function LinkPreviewCard({
 
       setPreview(result);
       setLoading(false);
+      onMediaLoad?.();
     }
 
     void loadPreview();
@@ -103,12 +106,12 @@ export default function LinkPreviewCard({
     >
       {preview.imageUrl ? (
         <div className="border-b border-zinc-200/80 bg-zinc-100 dark:border-zinc-600/80 dark:bg-zinc-900">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={preview.imageUrl}
             alt={preview.title ?? hostLabel}
             className="max-h-40 w-full object-cover"
             loading="lazy"
+            onLoad={onMediaLoad}
           />
         </div>
       ) : null}

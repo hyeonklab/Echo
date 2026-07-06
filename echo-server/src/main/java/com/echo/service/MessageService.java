@@ -160,6 +160,10 @@ public class MessageService {
 
 		Message message = getMessageInRoom(roomId, messageId);
 
+		if (message.getMessageType() == MessageType.ROOM_LEAVE) {
+			throw new IllegalArgumentException("Cannot delete a system message");
+		}
+
 		if (!message.getSender().getId().equals(userId)) {
 			throw new IllegalArgumentException("Only the sender can delete a message for everyone");
 		}

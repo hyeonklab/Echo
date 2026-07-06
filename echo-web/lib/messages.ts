@@ -1,7 +1,7 @@
 import { ensureAccessToken } from "@/lib/auth";
 import { apiFetch, getApiUrl } from "@/lib/api";
 
-export type MessageType = "TEXT" | "IMAGE_ALBUM";
+export type MessageType = "TEXT" | "IMAGE_ALBUM" | "ROOM_LEAVE";
 
 export type MessageFile = {
   id: number;

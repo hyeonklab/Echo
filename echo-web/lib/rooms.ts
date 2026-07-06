@@ -1,5 +1,6 @@
 import { ensureAccessToken, handleUnauthorized } from "@/lib/auth";
 import { apiFetch, getApiUrl } from "@/lib/api";
+import type { MessageType } from "@/lib/messages";
 
 export type RoomType = "GROUP" | "DM" | "SELF";
 
@@ -19,6 +20,7 @@ export type LastMessagePreview = {
   senderDisplayName: string;
   content: string;
   createdAt: string;
+  messageType?: MessageType;
 };
 
 export type Room = {
@@ -44,6 +46,10 @@ export function formatLastMessagePreview(room: Room, currentUserId: number): str
   const preview = normalized.length > 0
     ? (normalized.length > 60 ? `${normalized.slice(0, 60)}...` : normalized)
     : "사진";
+
+  if (room.lastMessage.messageType === "ROOM_LEAVE") {
+    return preview;
+  }
 
   if (room.type === "GROUP") {
     const senderLabel =

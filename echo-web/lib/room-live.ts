@@ -72,6 +72,7 @@ export function applyIncomingMessageToRooms(
     senderDisplayName: message.senderDisplayName,
     content: message.content,
     createdAt: message.createdAt,
+    messageType: message.messageType,
   };
 
   const shouldIncreaseUnread =
@@ -224,9 +225,11 @@ export function publishRoomUpdateEvent(room: Room): void {
     return;
   }
 
-  globalThis.window.dispatchEvent(
-    new CustomEvent<Room>(ROOM_UPDATE_EVENT, { detail: room }),
-  );
+  queueMicrotask(() => {
+    globalThis.window.dispatchEvent(
+      new CustomEvent<Room>(ROOM_UPDATE_EVENT, { detail: room }),
+    );
+  });
 }
 
 /**

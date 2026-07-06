@@ -11,6 +11,7 @@ type MessageContentProps = {
   content: string;
   attachments?: MessageFile[];
   isMine: boolean;
+  onMediaLoad?: () => void;
 };
 
 /**
@@ -20,6 +21,7 @@ export default function MessageContent({
   content,
   attachments = [],
   isMine,
+  onMediaLoad,
 }: Readonly<MessageContentProps>) {
   const firstUrl = extractUrls(content)[0] ?? null;
   const hasText = content.trim().length > 0;
@@ -30,11 +32,15 @@ export default function MessageContent({
         <p className="whitespace-pre-wrap break-words text-sm">{renderLinkedText(content, isMine)}</p>
       ) : null}
       {attachments.length > 0 ? (
-        <MessageAttachmentGrid attachments={attachments} isMine={isMine} />
+        <MessageAttachmentGrid
+          attachments={attachments}
+          isMine={isMine}
+          onMediaLoad={onMediaLoad}
+        />
       ) : null}
       {firstUrl ? (
         <div className="mt-2">
-          <LinkPreviewCard url={firstUrl} isMine={isMine} />
+          <LinkPreviewCard url={firstUrl} isMine={isMine} onMediaLoad={onMediaLoad} />
         </div>
       ) : null}
     </>

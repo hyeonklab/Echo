@@ -10,6 +10,7 @@ import type { MessageFile } from "@/lib/messages";
 type MessageAttachmentGridProps = {
   attachments: MessageFile[];
   isMine: boolean;
+  onMediaLoad?: () => void;
 };
 
 /**
@@ -26,6 +27,7 @@ function blockAttachmentDrag(event: DragEvent<HTMLElement>) {
 export default function MessageAttachmentGrid({
   attachments,
   isMine,
+  onMediaLoad,
 }: Readonly<MessageAttachmentGridProps>) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -192,6 +194,7 @@ export default function MessageAttachmentGrid({
               fileId={attachment.id}
               alt={attachment.originalName}
               className="max-h-56 w-full object-cover"
+              onLoad={onMediaLoad}
             />
           </button>
         ))}

@@ -9,6 +9,7 @@ type AuthenticatedImageProps = {
   alt: string;
   className?: string;
   draggable?: boolean;
+  onLoad?: () => void;
 };
 
 type ImageStatus = "loading" | "ready" | "error";
@@ -21,6 +22,7 @@ export default function AuthenticatedImage({
   alt,
   className = "",
   draggable,
+  onLoad,
 }: Readonly<AuthenticatedImageProps>) {
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<ImageStatus>("loading");
@@ -85,5 +87,13 @@ export default function AuthenticatedImage({
     );
   }
 
-  return <img src={objectUrl} alt={alt} className={className} draggable={draggable} />;
+  return (
+    <img
+      src={objectUrl}
+      alt={alt}
+      className={className}
+      draggable={draggable}
+      onLoad={onLoad}
+    />
+  );
 }

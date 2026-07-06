@@ -6,6 +6,7 @@ package com.echo.domain;
 public enum MessageType {
 
 	TEXT,
-	IMAGE_ALBUM
+	IMAGE_ALBUM,
+	ROOM_LEAVE
 
 }

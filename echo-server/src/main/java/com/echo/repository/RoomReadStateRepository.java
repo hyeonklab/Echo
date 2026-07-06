@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.echo.domain.RoomMemberId;
 import com.echo.domain.RoomReadState;
@@ -17,5 +20,12 @@ public interface RoomReadStateRepository extends JpaRepository<RoomReadState, Ro
 	Optional<RoomReadState> findById_RoomIdAndId_UserId(Long roomId, Long userId);
 
 	List<RoomReadState> findById_UserIdAndId_RoomIdIn(Long userId, Collection<Long> roomIds);
+
+	/**
+	 * 채팅방 읽음 상태를 모두 삭제한다.
+	 */
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query("DELETE FROM RoomReadState rrs WHERE rrs.id.roomId = :roomId")
+	void deleteAllByRoom_Id(@Param("roomId") Long roomId);
 
 }

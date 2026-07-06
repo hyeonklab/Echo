@@ -52,6 +52,7 @@ public class MessageService {
 	private final FileService fileService;
 	private final MessageBroadcastService messageBroadcastService;
 	private final RoomReadStateService roomReadStateService;
+	private final RoomService roomService;
 
 	/**
 	 * 채팅방 메시지 히스토리를 반환한다.
@@ -123,6 +124,7 @@ public class MessageService {
 
 		roomReadStateService.markAsRead(roomId, userId, message.getId());
 		messageBroadcastService.broadcastMessage(response);
+		roomService.restoreHiddenDmRoomForRecipients(room, userId, message);
 
 		return response;
 	}

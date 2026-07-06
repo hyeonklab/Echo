@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -119,5 +120,14 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 		GROUP BY m.room_id
 		""", nativeQuery = true)
 	List<Object[]> countUnreadByRoomIds(@Param("userId") Long userId, @Param("roomIds") Collection<Long> roomIds);
+
+	/**
+	 * 채팅방 메시지를 모두 삭제한다.
+	 */
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query("DELETE FROM Message m WHERE m.room.id = :roomId")
+	void deleteAllByRoom_Id(@Param("roomId") Long roomId);
+
+	long countByRoom_Id(Long roomId);
 
 }

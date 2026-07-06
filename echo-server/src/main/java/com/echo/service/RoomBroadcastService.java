@@ -4,6 +4,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.echo.dto.RoomDeletedResponse;
 import com.echo.dto.RoomMetaUpdateResponse;
 import com.echo.dto.RoomResponse;
 import com.echo.domain.Room;
@@ -35,6 +36,15 @@ public class RoomBroadcastService {
 		String destination = "/topic/users/" + userId + "/rooms";
 
 		messagingTemplate.convertAndSend(destination, room);
+	}
+
+	/**
+	 * 사용자에게 채팅방 삭제를 전송한다.
+	 */
+	public void broadcastRoomDeleted(Long userId, Long roomId) {
+		String destination = "/topic/users/" + userId + "/rooms/deleted";
+
+		messagingTemplate.convertAndSend(destination, new RoomDeletedResponse(roomId));
 	}
 
 }

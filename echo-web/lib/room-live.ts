@@ -37,6 +37,22 @@ export function sortRoomsByLastActivity(rooms: Room[]): Room[] {
 }
 
 /**
+ * 채팅방 참여 변경으로 목록에 방을 병합한다.
+ */
+export function applyRoomMembershipToRooms(rooms: Room[], incoming: Room): Room[] {
+  const existingIndex = rooms.findIndex((room) => room.id === incoming.id);
+
+  if (existingIndex < 0) {
+    return sortRoomsByLastActivity([incoming, ...rooms]);
+  }
+
+  const next = [...rooms];
+  next[existingIndex] = { ...next[existingIndex], ...incoming };
+
+  return sortRoomsByLastActivity(next);
+}
+
+/**
  * 수신 메시지로 채팅방 목록의 미리보기를 갱신한다.
  */
 export function applyIncomingMessageToRooms(

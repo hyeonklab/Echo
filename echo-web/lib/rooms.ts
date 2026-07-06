@@ -3,6 +3,8 @@ import { apiFetch, getApiUrl } from "@/lib/api";
 
 export type RoomType = "GROUP" | "DM" | "SELF";
 
+export type RoomDeleteScope = "me" | "all";
+
 export type RoomMember = {
   userId: number;
   displayName: string;
@@ -403,6 +405,13 @@ export async function markRoomRead(roomId: number, messageId: number): Promise<b
 }
 
 /**
+ * DM 채팅방 삭제 시 범위 선택이 필요한지 반환한다.
+ */
+export function requiresDmLeaveScopeChoice(room: Room): boolean {
+  return room.type === "DM";
+}
+
+/**
  * 채팅방 나가기/삭제 버튼 문구를 반환한다.
  */
 export function getLeaveRoomLabel(room: Room, currentUserId: number): string {
@@ -414,7 +423,7 @@ export function getLeaveRoomLabel(room: Room, currentUserId: number): string {
     return "대화방 삭제";
   }
 
-  return "채팅방 나가기";
+  return "채팅방 삭제";
 }
 
 /**
@@ -424,12 +433,15 @@ export function getLeaveRoomConfirmText(
   room: Room,
   currentUserId: number,
   displayName: string,
-): { title: string; description: string; hint: string } {
+  scope: RoomDeleteScope = "me",
+): { title: string; description: string; hint: string; confirmLabel: string; isDestructive: boolean } {
   if (room.type === "GROUP" && room.createdByUserId === currentUserId) {
     return {
       title: "방 삭제",
       description: `${displayName} 채팅방을 삭제하시겠습니까?`,
       hint: "삭제하면 모든 참여자에게서 채팅방이 사라집니다.",
+      confirmLabel: "방 삭제",
+      isDestructive: true,
     };
   }
 
@@ -438,6 +450,8 @@ export function getLeaveRoomConfirmText(
       title: "방 나가기",
       description: `${displayName} 채팅방에서 나가시겠습니까?`,
       hint: "나가면 목록에서 채팅방이 제거됩니다.",
+      confirmLabel: "방 나가기",
+      isDestructive: true,
     };
   }
 
@@ -446,31 +460,67 @@ export function getLeaveRoomConfirmText(
       title: "대화방 삭제",
       description: "나와의 대화방을 삭제하시겠습니까?",
       hint: "삭제 후에는 목록에서 제거됩니다.",
+      confirmLabel: "대화방 삭제",
+      isDestructive: true,
+    };
+  }
+
+  if (scope === "all") {
+    return {
+      title: "양쪽 모두 삭제",
+      description: `${displayName}과(와)의 채팅방을 양쪽 모두에서 완전히 삭제할까요?`,
+      hint: "상대방도 채팅방과 대화 내용에 접근할 수 없게 됩니다. 이 작업은 되돌릴 수 없습니다.",
+      confirmLabel: "양쪽 모두 삭제",
+      isDestructive: true,
     };
   }
 
   return {
-    title: "채팅방 나가기",
-    description: `${displayName} 채팅방에서 나가시겠습니까?`,
-    hint: "나가면 목록에서 채팅방이 제거됩니다.",
+    title: "나만 삭제",
+    description: `${displayName}과(와)의 채팅방을 내 목록에서만 삭제할까요?`,
+    hint: "상대방에게는 계속 보입니다. 다시 대화를 시작하면 이전 내용이 복원됩니다.",
+    confirmLabel: "나만 삭제",
+    isDestructive: false,
   };
+}
+
+/**
+ * API 호출에 사용할 채팅방 삭제 범위를 반환한다.
+ */
+export function resolveRoomDeleteScope(room: Room, scope: RoomDeleteScope): RoomDeleteScope {
+  if (room.type === "DM") {
+    return scope;
+  }
+
+  return "me";
 }
 
 /**
  * 채팅방을 삭제하거나 참여를 종료한다.
  */
-export async function deleteRoom(roomId: number): Promise<boolean> {
+export async function deleteRoom(roomId: number, scope: RoomDeleteScope = "me"): Promise<boolean> {
   const token = await resolveAccessToken();
 
   if (!token) {
     return false;
   }
 
-  const response = await apiFetch(`${getApiUrl()}/api/rooms/${roomId}`, {
-    method: "DELETE",
-    headers: authHeaders(token),
+  const headers = authHeaders(token);
+
+  let response = await apiFetch(`${getApiUrl()}/api/rooms/${roomId}/leave`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ scope }),
     cache: "no-store",
   });
+
+  if (response.status === 404) {
+    response = await apiFetch(`${getApiUrl()}/api/rooms/${roomId}?scope=${scope}`, {
+      method: "DELETE",
+      headers,
+      cache: "no-store",
+    });
+  }
 
   return response.ok;
 }

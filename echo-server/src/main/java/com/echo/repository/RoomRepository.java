@@ -18,6 +18,10 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 		SELECT DISTINCT rm.room
 		FROM RoomMember rm
 		WHERE rm.user.id = :userId
+		AND NOT EXISTS (
+			SELECT 1 FROM RoomHidden rh
+			WHERE rh.user.id = :userId AND rh.room.id = rm.room.id
+		)
 		ORDER BY rm.room.createdAt DESC
 		""")
 	List<Room> findAllByMemberUserId(@Param("userId") Long userId);
@@ -32,6 +36,21 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 		AND COUNT(rm) = 2
 		""")
 	List<Room> findDmRoomsBetween(
+		@Param("userId1") Long userId1,
+		@Param("userId2") Long userId2,
+		@Param("roomType") RoomType roomType
+	);
+
+	@Query("""
+		SELECT rm.room
+		FROM RoomMember rm
+		WHERE rm.room.type = :roomType
+		AND rm.user.id IN (:userId1, :userId2)
+		GROUP BY rm.room
+		HAVING SUM(CASE WHEN rm.user.id = :userId1 THEN 1 ELSE 0 END) > 0
+		AND SUM(CASE WHEN rm.user.id = :userId2 THEN 1 ELSE 0 END) > 0
+		""")
+	List<Room> findAllDmRoomsBetweenUsers(
 		@Param("userId1") Long userId1,
 		@Param("userId2") Long userId2,
 		@Param("roomType") RoomType roomType

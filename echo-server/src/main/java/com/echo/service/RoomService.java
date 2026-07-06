@@ -1,5 +1,7 @@
 package com.echo.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -9,9 +11,12 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.echo.domain.Message;
 import com.echo.domain.Room;
+import com.echo.domain.RoomHidden;
 import com.echo.domain.RoomMember;
 import com.echo.domain.RoomType;
 import com.echo.domain.User;
@@ -22,9 +27,13 @@ import com.echo.dto.LastMessagePreview;
 import com.echo.dto.RoomResponse;
 import com.echo.dto.UpdateRoomNameRequest;
 import com.echo.repository.MessageRepository;
+import com.echo.repository.RoomHiddenRepository;
 import com.echo.repository.RoomMemberRepository;
+import com.echo.repository.RoomReadStateRepository;
 import com.echo.repository.RoomRepository;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -36,10 +45,15 @@ public class RoomService {
 
 	private final RoomRepository roomRepository;
 	private final RoomMemberRepository roomMemberRepository;
+	private final RoomHiddenRepository roomHiddenRepository;
 	private final MessageRepository messageRepository;
+	private final RoomReadStateRepository roomReadStateRepository;
 	private final RoomReadStateService roomReadStateService;
 	private final UserService userService;
 	private final RoomBroadcastService roomBroadcastService;
+
+	@PersistenceContext
+	private EntityManager entityManager;
 
 	/**
 	 * 사용자가 참여 중인 채팅방 목록을 반환한다.
@@ -125,10 +139,18 @@ public class RoomService {
 		User currentUser = userService.getUser(userId);
 		User targetUser = userService.getUser(request.targetUserId());
 
-		List<Room> existingRooms = roomRepository.findDmRoomsBetween(userId, request.targetUserId(), RoomType.DM);
+		List<Room> existingRooms = roomRepository.findAllDmRoomsBetweenUsers(
+			userId,
+			request.targetUserId(),
+			RoomType.DM
+		);
 
 		if (!existingRooms.isEmpty()) {
-			return toRoomResponse(existingRooms.get(0), userId);
+			Room primaryRoom = selectPrimaryDmRoom(userId, existingRooms);
+			removeDuplicateDmRooms(existingRooms, primaryRoom);
+			clearRoomHidden(userId, primaryRoom.getId());
+
+			return toRoomResponse(primaryRoom, userId);
 		}
 
 		Room newRoom = Room.builder()
@@ -215,31 +237,248 @@ public class RoomService {
 	}
 
 	/**
+	 * DM 새 메시지 수신 시 숨김 처리된 상대방 목록에 채팅방을 복원한다.
+	 */
+	@Transactional
+	public void restoreHiddenDmRoomForRecipients(Room room, Long senderUserId, Message lastMessage) {
+		if (room.getType() != RoomType.DM) {
+			return;
+		}
+
+		List<RoomMember> members = roomMemberRepository.findAllByRoom_IdOrderByJoinedAtAsc(room.getId());
+
+		for (RoomMember member : members) {
+			Long memberUserId = member.getUser().getId();
+
+			if (memberUserId.equals(senderUserId)) {
+				continue;
+			}
+
+			if (!roomHiddenRepository.existsById_UserIdAndId_RoomId(memberUserId, room.getId())) {
+				continue;
+			}
+
+			clearRoomHidden(memberUserId, room.getId());
+
+			int unreadCount = roomReadStateService.countUnread(room.getId(), memberUserId);
+			RoomResponse response = toRoomResponse(room, memberUserId, lastMessage, unreadCount);
+			roomBroadcastService.broadcastRoomMembershipUpdated(memberUserId, response);
+		}
+	}
+
+	/**
 	 * 채팅방을 삭제하거나 참여를 종료한다.
 	 */
 	@Transactional
-	public void deleteRoom(Long roomId, Long userId) {
-		Room room = getRoomForMember(roomId, userId);
+	public void deleteRoom(Long roomId, Long userId, String scope) {
+		if (!roomRepository.existsById(roomId)) {
+			return;
+		}
+
+		if (!roomMemberRepository.existsByRoom_IdAndUser_Id(roomId, userId)) {
+			return;
+		}
+
+		Room room = roomRepository.findById(Objects.requireNonNull(roomId))
+			.orElseThrow(() -> new IllegalArgumentException("Room not found or access denied"));
+		String normalizedScope = normalizeDeleteScope(scope);
+
+		if (room.getType() == RoomType.SELF) {
+			purgeRoom(roomId);
+			return;
+		}
+
+		if (room.getType() == RoomType.DM) {
+			if ("all".equals(normalizedScope)) {
+				deleteAllDmRoomsBetweenMembers(userId, roomId);
+				return;
+			}
+
+			hideRoomForUser(room, userId);
+			return;
+		}
 
 		if (room.getCreatedBy().getId().equals(userId)) {
-			roomRepository.delete(room);
+			notifyRoomDeletedToOthers(room, userId);
+			purgeRoom(roomId);
 			return;
 		}
 
 		roomMemberRepository.deleteByRoom_IdAndUser_Id(roomId, userId);
 
-		if (room.getType() != RoomType.GROUP || roomMemberRepository.countByRoom_Id(roomId) == 0) {
-			roomRepository.delete(room);
+		if (roomMemberRepository.countByRoom_Id(roomId) == 0) {
+			purgeRoom(roomId);
 		}
 	}
 
 	private Room getRoomForMember(Long roomId, Long userId) {
+		Room room = requireRoomMember(roomId, userId);
+
+		if (roomHiddenRepository.existsById_UserIdAndId_RoomId(userId, roomId)) {
+			throw new IllegalArgumentException("Room not found or access denied");
+		}
+
+		return room;
+	}
+
+	private Room requireRoomMember(Long roomId, Long userId) {
 		if (!roomMemberRepository.existsByRoom_IdAndUser_Id(roomId, userId)) {
 			throw new IllegalArgumentException("Room not found or access denied");
 		}
 
 		return roomRepository.findById(Objects.requireNonNull(roomId))
 			.orElseThrow(() -> new IllegalArgumentException("Room not found or access denied"));
+	}
+
+	private void hideRoomForUser(Room room, Long userId) {
+		if (roomHiddenRepository.existsById_UserIdAndId_RoomId(userId, room.getId())) {
+			return;
+		}
+
+		User user = userService.getUser(userId);
+		RoomHidden hidden = RoomHidden.builder()
+			.user(user)
+			.room(room)
+			.build();
+
+		roomHiddenRepository.save(Objects.requireNonNull(hidden));
+	}
+
+	private void clearRoomHidden(Long userId, Long roomId) {
+		roomHiddenRepository.deleteById_UserIdAndId_RoomId(userId, roomId);
+	}
+
+	private void deleteAllDmRoomsBetweenMembers(Long userId, Long roomId) {
+		Long otherUserId = findOtherMemberUserId(roomId, userId);
+		List<Room> dmRooms = otherUserId == null
+			? roomRepository.findById(roomId).map(List::of).orElse(List.of())
+			: roomRepository.findAllDmRoomsBetweenUsers(userId, otherUserId, RoomType.DM);
+
+		if (dmRooms.isEmpty()) {
+			Room room = roomRepository.findById(roomId).orElse(null);
+
+			if (room != null) {
+				dmRooms = List.of(room);
+			}
+		}
+
+		notifyRoomsDeletedToOthers(userId, dmRooms);
+
+		for (Room dmRoom : dmRooms) {
+			purgeRoom(dmRoom.getId());
+		}
+	}
+
+	private Long findOtherMemberUserId(Long roomId, Long userId) {
+		return roomMemberRepository.findUserIdsByRoomId(roomId).stream()
+			.filter(memberUserId -> !memberUserId.equals(userId))
+			.findFirst()
+			.orElse(null);
+	}
+
+	private Room selectPrimaryDmRoom(Long viewerUserId, List<Room> rooms) {
+		Room primaryRoom = rooms.get(0);
+
+		for (Room room : rooms) {
+			if (compareRoomActivity(room, primaryRoom, viewerUserId) > 0) {
+				primaryRoom = room;
+			}
+		}
+
+		return primaryRoom;
+	}
+
+	private void removeDuplicateDmRooms(List<Room> rooms, Room primaryRoom) {
+		for (Room room : rooms) {
+			if (room.getId().equals(primaryRoom.getId())) {
+				continue;
+			}
+
+			purgeRoom(room.getId());
+		}
+	}
+
+	private void purgeRoom(Long roomId) {
+		if (roomId == null || !roomRepository.existsById(roomId)) {
+			return;
+		}
+
+		messageRepository.deleteAllByRoom_Id(roomId);
+		roomHiddenRepository.deleteAllByRoom_Id(roomId);
+		roomReadStateRepository.deleteAllByRoom_Id(roomId);
+		roomMemberRepository.deleteAllByRoom_Id(roomId);
+		roomRepository.deleteById(roomId);
+		entityManager.flush();
+		entityManager.clear();
+	}
+
+	private int compareRoomActivity(Room left, Room right, Long viewerUserId) {
+		Message leftLastMessage = findLastMessage(left.getId(), viewerUserId);
+		Message rightLastMessage = findLastMessage(right.getId(), viewerUserId);
+
+		if (leftLastMessage == null && rightLastMessage == null) {
+			return left.getCreatedAt().compareTo(right.getCreatedAt());
+		}
+
+		if (leftLastMessage == null) {
+			return -1;
+		}
+
+		if (rightLastMessage == null) {
+			return 1;
+		}
+
+		return leftLastMessage.getCreatedAt().compareTo(rightLastMessage.getCreatedAt());
+	}
+
+	private void notifyRoomDeletedToOthers(Room room, Long actorUserId) {
+		notifyRoomsDeletedToOthers(actorUserId, List.of(room));
+	}
+
+	private void notifyRoomsDeletedToOthers(Long actorUserId, List<Room> rooms) {
+		Map<Long, List<Long>> roomIdsByMemberUserId = new HashMap<>();
+
+		for (Room room : rooms) {
+			Long roomId = room.getId();
+
+			for (Long memberUserId : roomMemberRepository.findUserIdsByRoomId(roomId)) {
+				if (memberUserId.equals(actorUserId)) {
+					continue;
+				}
+
+				roomIdsByMemberUserId
+					.computeIfAbsent(memberUserId, ignored -> new ArrayList<>())
+					.add(roomId);
+			}
+		}
+
+		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+			broadcastRoomDeletedToMembers(roomIdsByMemberUserId);
+			return;
+		}
+
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				broadcastRoomDeletedToMembers(roomIdsByMemberUserId);
+			}
+		});
+	}
+
+	private void broadcastRoomDeletedToMembers(Map<Long, List<Long>> roomIdsByMemberUserId) {
+		for (Map.Entry<Long, List<Long>> entry : roomIdsByMemberUserId.entrySet()) {
+			for (Long roomId : entry.getValue()) {
+				roomBroadcastService.broadcastRoomDeleted(entry.getKey(), roomId);
+			}
+		}
+	}
+
+	private String normalizeDeleteScope(String scope) {
+		if ("all".equals(scope)) {
+			return "all";
+		}
+
+		return "me";
 	}
 
 	private void addMember(Room room, User user) {

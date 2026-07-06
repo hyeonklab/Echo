@@ -13,6 +13,7 @@ export type RoomReadHandler = (read: RoomReadEvent) => void;
 export type RoomMetaHandler = (update: RoomMetaUpdate) => void;
 export type PresenceHandler = (update: PresenceUpdate) => void;
 export type UserRoomMembershipHandler = (room: Room) => void;
+export type UserRoomDeletedHandler = (deleted: { roomId: number }) => void;
 
 export type RoomMetaUpdate = {
   roomId: number;
@@ -313,6 +314,18 @@ export function subscribeUserRoomMembership(
 ): () => void {
   return subscribeDestination(`/topic/users/${userId}/rooms`, (body) => {
     onRoomMembership(JSON.parse(body) as Room);
+  });
+}
+
+/**
+ * 사용자 채팅방 삭제 STOMP 구독을 시작한다.
+ */
+export function subscribeUserRoomDeleted(
+  userId: number,
+  onRoomDeleted: UserRoomDeletedHandler,
+): () => void {
+  return subscribeDestination(`/topic/users/${userId}/rooms/deleted`, (body) => {
+    onRoomDeleted(JSON.parse(body) as { roomId: number });
   });
 }
 

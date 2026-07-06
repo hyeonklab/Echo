@@ -11,12 +11,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.echo.dto.CreateDmRoomRequest;
 import com.echo.dto.CreateGroupRoomRequest;
+import com.echo.dto.DeleteRoomRequest;
 import com.echo.dto.InviteRoomMemberRequest;
 import com.echo.dto.MarkRoomReadRequest;
 import com.echo.dto.RoomReadResponse;
@@ -120,13 +122,28 @@ public class RoomController {
 	/**
 	 * 채팅방을 삭제하거나 참여를 종료한다.
 	 */
+	@PostMapping("/{roomId}/leave")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void leaveRoom(
+		@AuthenticationPrincipal UserPrincipal principal,
+		@PathVariable Long roomId,
+		@Valid @RequestBody(required = false) DeleteRoomRequest request
+	) {
+		String scope = request == null ? "me" : request.scopeOrDefault();
+		executeRoomVoidAction(() -> roomService.deleteRoom(roomId, requireUserId(principal), scope));
+	}
+
+	/**
+	 * 채팅방을 삭제하거나 참여를 종료한다.
+	 */
 	@DeleteMapping("/{roomId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void deleteRoom(
 		@AuthenticationPrincipal UserPrincipal principal,
-		@PathVariable Long roomId
+		@PathVariable Long roomId,
+		@RequestParam(defaultValue = "me") String scope
 	) {
-		executeRoomVoidAction(() -> roomService.deleteRoom(roomId, requireUserId(principal)));
+		executeRoomVoidAction(() -> roomService.deleteRoom(roomId, requireUserId(principal), scope));
 	}
 
 	private Long requireUserId(UserPrincipal principal) {

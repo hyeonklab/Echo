@@ -20,8 +20,8 @@ import {
   sendMessage,
   type MemberReadState,
 } from "@/lib/messages";
-import { formatUnreadCount, publishRoomMessageDeletedEvent, publishRoomReadEvent, publishRoomUpdateEvent, publishRoomLeftEvent, subscribeRoomUpdateEvents } from "@/lib/room-live";
-import { Room, canInviteToRoom, canRenameRoom, deleteRoom, fetchRoom, formatRoomMemberSummary, getLeaveRoomConfirmText, getLeaveRoomLabel, getRoomDisplayName, getRoomMember, inviteRoomMember, markRoomRead, updateRoomName } from "@/lib/rooms";
+import { formatUnreadCount, publishRoomMessageDeletedEvent, publishRoomReadEvent, publishRoomUpdateEvent, publishRoomLeftEvent, subscribeRoomLeftEvents, subscribeRoomUpdateEvents } from "@/lib/room-live";
+import { Room, canInviteToRoom, canRenameRoom, deleteRoom, fetchRoom, formatRoomMemberSummary, getLeaveRoomConfirmText, getLeaveRoomLabel, getRoomDisplayName, getRoomMember, inviteRoomMember, markRoomRead, requiresDmLeaveScopeChoice, resolveRoomDeleteScope, updateRoomName, type RoomDeleteScope } from "@/lib/rooms";
 import { subscribeRoomMessageDeletes, subscribeRoomMessages, subscribeRoomRead } from "@/lib/stomp";
 import { SearchUser, getProviderLabel, searchUsers } from "@/lib/users";
 
@@ -255,12 +255,20 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     message: Message;
     scope: MessageDeleteScope;
   } | null>(null);
-  const [pendingLeaveRoom, setPendingLeaveRoom] = useState(false);
+  const [pendingLeaveRoom, setPendingLeaveRoom] = useState<{
+    step: "dm-choice" | "confirm";
+    scope?: RoomDeleteScope;
+  } | null>(null);
   const [leavingRoom, setLeavingRoom] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState<number | null>(null);
 
   useEffect(() => {
     lastMarkedMessageIdRef.current = null;
+    setMessages([]);
+    setRoom(null);
+    setHasMore(false);
+    setPeerLastReadMessageId(null);
+    setMemberReadStates([]);
     setPendingAttachments((prev) => {
       for (const attachment of prev) {
         URL.revokeObjectURL(attachment.previewUrl);
@@ -445,6 +453,16 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     });
   }, [loading, roomId]);
 
+  useEffect(() => {
+    return subscribeRoomLeftEvents((leftRoomId) => {
+      if (leftRoomId !== roomId) {
+        return;
+      }
+
+      router.push("/chat");
+    });
+  }, [roomId, router]);
+
   function focusMessageInput() {
     messageInputRef.current?.focus({ preventScroll: true });
   }
@@ -619,8 +637,18 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   }
 
   function handleRequestLeaveRoom() {
-    setPendingLeaveRoom(true);
+    if (!room) {
+      return;
+    }
+
     setErrorMessage(null);
+
+    if (requiresDmLeaveScopeChoice(room)) {
+      setPendingLeaveRoom({ step: "dm-choice" });
+      return;
+    }
+
+    setPendingLeaveRoom({ step: "confirm", scope: "me" });
   }
 
   function handleCancelLeaveRoom() {
@@ -628,24 +656,30 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
       return;
     }
 
-    setPendingLeaveRoom(false);
+    setPendingLeaveRoom(null);
+  }
+
+  function handleSelectLeaveScope(scope: RoomDeleteScope) {
+    setPendingLeaveRoom({ step: "confirm", scope });
   }
 
   async function handleConfirmLeaveRoom() {
-    if (!room) {
+    if (!room || !pendingLeaveRoom) {
       return;
     }
 
+    const scope = resolveRoomDeleteScope(room, pendingLeaveRoom.scope ?? "me");
+
     setLeavingRoom(true);
     setErrorMessage(null);
-    setPendingLeaveRoom(false);
+    setPendingLeaveRoom(null);
 
-    const success = await deleteRoom(roomId);
+    const success = await deleteRoom(roomId, scope);
 
     setLeavingRoom(false);
 
     if (!success) {
-      setErrorMessage("채팅방 나가기에 실패했습니다.");
+      setErrorMessage("채팅방 삭제에 실패했습니다. 백엔드를 재시작한 뒤 다시 시도해 주세요.");
       return;
     }
 
@@ -877,11 +911,15 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   }
 
   const leaveRoomLabel = getLeaveRoomLabel(room, currentUser.id);
-  const leaveRoomConfirm = getLeaveRoomConfirmText(
-    room,
-    currentUser.id,
-    getRoomDisplayName(room, currentUser.id),
-  );
+  const leaveRoomDisplayName = getRoomDisplayName(room, currentUser.id);
+  const leaveRoomConfirm = pendingLeaveRoom?.step === "confirm"
+    ? getLeaveRoomConfirmText(
+      room,
+      currentUser.id,
+      leaveRoomDisplayName,
+      pendingLeaveRoom.scope ?? "me",
+    )
+    : null;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -1298,7 +1336,65 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
         </div>
       ) : null}
 
-      {pendingLeaveRoom ? (
+      {pendingLeaveRoom?.step === "dm-choice" ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="삭제 방식 선택 닫기"
+            className="absolute inset-0 bg-black/50"
+            onClick={handleCancelLeaveRoom}
+            disabled={leavingRoom}
+          />
+          <div
+            role="dialog"
+            aria-labelledby="leave-room-choice-title"
+            className="relative w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-5 shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
+          >
+            <h3 id="leave-room-choice-title" className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              채팅방 삭제
+            </h3>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+              {leaveRoomDisplayName}과(와)의 채팅방을 어떻게 삭제할까요?
+            </p>
+            <div className="mt-4 space-y-2">
+              <button
+                type="button"
+                onClick={() => handleSelectLeaveScope("me")}
+                disabled={leavingRoom}
+                className="w-full rounded-lg border border-zinc-300 px-4 py-3 text-left transition hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:hover:bg-zinc-800"
+              >
+                <span className="block text-sm font-medium text-zinc-900 dark:text-zinc-100">나만 삭제</span>
+                <span className="mt-1 block text-xs text-zinc-500">
+                  내 목록에서만 숨깁니다. 상대방에게는 계속 보입니다.
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectLeaveScope("all")}
+                disabled={leavingRoom}
+                className="w-full rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-left transition hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950/40 dark:hover:bg-red-950/70"
+              >
+                <span className="block text-sm font-medium text-red-800 dark:text-red-200">양쪽 모두 삭제</span>
+                <span className="mt-1 block text-xs text-red-700 dark:text-red-300">
+                  상대방도 채팅방에서 완전히 삭제됩니다.
+                </span>
+              </button>
+            </div>
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={handleCancelLeaveRoom}
+                disabled={leavingRoom}
+                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {pendingLeaveRoom?.step === "confirm" && leaveRoomConfirm ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <button
             type="button"
@@ -1311,7 +1407,11 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
             role="alertdialog"
             aria-labelledby="leave-room-title"
             aria-describedby="leave-room-description"
-            className="relative w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-5 shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
+            className={`relative w-full max-w-sm rounded-xl border bg-white p-5 shadow-xl dark:bg-zinc-900 ${
+              leaveRoomConfirm.isDestructive
+                ? "border-red-300 dark:border-red-900"
+                : "border-zinc-200 dark:border-zinc-700"
+            }`}
           >
             <h3 id="leave-room-title" className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
               {leaveRoomConfirm.title}
@@ -1319,7 +1419,15 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
             <p id="leave-room-description" className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
               {leaveRoomConfirm.description}
             </p>
-            <p className="mt-1 text-xs text-zinc-500">{leaveRoomConfirm.hint}</p>
+            <p
+              className={`mt-2 rounded-lg px-3 py-2 text-xs ${
+                leaveRoomConfirm.isDestructive
+                  ? "border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200"
+                  : "text-zinc-500"
+              }`}
+            >
+              {leaveRoomConfirm.hint}
+            </p>
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
@@ -1333,9 +1441,13 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
                 type="button"
                 onClick={() => void handleConfirmLeaveRoom()}
                 disabled={leavingRoom}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-50"
+                className={`rounded-lg px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50 ${
+                  leaveRoomConfirm.isDestructive
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-zinc-800 hover:bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+                }`}
               >
-                {leavingRoom ? "처리 중..." : leaveRoomConfirm.title}
+                {leavingRoom ? "처리 중..." : leaveRoomConfirm.confirmLabel}
               </button>
             </div>
           </div>

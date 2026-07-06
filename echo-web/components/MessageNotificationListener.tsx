@@ -19,6 +19,8 @@ import {
   publishRoomReadEvent,
   publishRoomsSnapshotEvent,
   publishRoomUpdateEvent,
+  applyRoomMembershipToRooms,
+  publishRoomLeftEvent,
   subscribeRoomsSnapshotEvents,
   subscribeRoomLeftEvents,
   toRoomFromMetaUpdate,
@@ -29,6 +31,7 @@ import {
   subscribeRoomsMessages,
   subscribeRoomsMeta,
   subscribeRoomsReads,
+  subscribeUserRoomDeleted,
   subscribeUserRoomMembership,
 } from "@/lib/stomp";
 import type { RoomMetaUpdate } from "@/lib/stomp";
@@ -37,16 +40,7 @@ import type { RoomMetaUpdate } from "@/lib/stomp";
  * 채팅방 목록에 신규/갱신 방 정보를 병합한다.
  */
 function mergeRoomList(rooms: Room[], incoming: Room): Room[] {
-  const existingIndex = rooms.findIndex((room) => room.id === incoming.id);
-
-  if (existingIndex < 0) {
-    return [incoming, ...rooms];
-  }
-
-  const next = [...rooms];
-  next[existingIndex] = { ...next[existingIndex], ...incoming };
-
-  return next;
+  return applyRoomMembershipToRooms(rooms, incoming);
 }
 
 /**
@@ -138,6 +132,22 @@ export default function MessageNotificationListener() {
       });
     });
   }, []);
+
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    return subscribeUserRoomDeleted(currentUser.id, (deleted) => {
+      setRooms((prev) => {
+        const next = prev.filter((room) => room.id !== deleted.roomId);
+        publishRoomsSnapshotEvent(next);
+
+        return next;
+      });
+      publishRoomLeftEvent(deleted.roomId);
+    });
+  }, [currentUser]);
 
   useEffect(() => {
     if (!currentUser) {

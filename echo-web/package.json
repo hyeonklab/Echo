@@ -7,7 +7,9 @@
     "build": "npm run lint && next build",
     "start": "next start",
     "lint": "eslint",
-    "lint:fix": "eslint --fix"
+    "lint:fix": "eslint --fix",
+    "screenshots": "node scripts/capture-readme-screenshots.mjs",
+    "screenshots:install": "playwright install chromium"
   },
   "dependencies": {
     "@stomp/stompjs": "^7.3.0",
@@ -22,6 +24,8 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "jsonwebtoken": "^9.0.2",
+    "playwright": "^1.51.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

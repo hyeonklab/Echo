@@ -6,6 +6,25 @@
 
 ---
 
+## 주요 화면 (다크 모드)
+
+| 로그인 | 홈 |
+| :---: | :---: |
+| ![로그인](docs/screenshots/login.png) | ![홈](docs/screenshots/home.png) |
+
+| 친구 | 채팅 목록 |
+| :---: | :---: |
+| ![친구](docs/screenshots/friends.png) | ![채팅 목록](docs/screenshots/chat-list.png) |
+
+| 링크 미리보기 (방 27) | 사진 미리보기 (방 32) |
+| :---: | :---: |
+| ![채팅방 링크](docs/screenshots/chat-room-link-preview.png) | ![채팅방 사진](docs/screenshots/chat-room-image-preview.png) |
+
+> 스크린샷 재생성: `echo-server`·`echo-web` 실행 후 `cd echo-web && npm run screenshots`  
+> (최초 1회 `npm run screenshots:install` 필요, DB에 로그인한 사용자 1명 이상 필요)
+
+---
+
 ## 프로젝트 개요
 
 Discord/Slack 라이트 수준의 메신저로, 소셜 로그인·친구·채팅방·실시간 메시징·읽음 표시·파일 첨부를 구현합니다.
@@ -290,6 +309,18 @@ npm run dev
 ```
 
 - 웹: `http://localhost:3000`
+
+### 4. README 스크린샷 (선택)
+
+백엔드·프론트·PostgreSQL이 실행 중이고, DB에 로그인한 사용자가 있어야 합니다.
+
+```bash
+cd echo-web
+npm run screenshots:install   # 최초 1회
+npm run screenshots
+```
+
+`docs/screenshots/*.png` (다크 모드)가 생성됩니다. JWT는 Echo 루트 `.env`의 `JWT_SECRET`으로 로컬 DB 사용자에 대해 발급합니다.
 
 ---
 

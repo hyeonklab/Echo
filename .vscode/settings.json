@@ -13,5 +13,6 @@
   "java.import.maven.enabled": true,
   "java.project.importOnFirstTimeStartup": "automatic",
   "maven.executable.preferMavenWrapper": true,
-  "sonarlint.automaticAnalysis": true
+  "sonarlint.automaticAnalysis": true,
+  "java.compile.nullAnalysis.mode": "automatic"
 }

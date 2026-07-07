@@ -5,6 +5,7 @@ export type Friend = {
   id: number;
   email: string | null;
   displayName: string;
+  nickname: string | null;
   provider: "LOCAL" | "GOOGLE" | "NAVER";
   avatarFileId: number | null;
   addedAt: string;
@@ -123,6 +124,64 @@ export async function removeFriend(
   }
 
   return { success: true, errorMessage: null };
+}
+
+/**
+ * 친구에게 표시할 이름을 반환한다.
+ */
+export function getFriendDisplayName(friend: Pick<Friend, "displayName" | "nickname">): string {
+  const nickname = friend.nickname?.trim();
+
+  if (nickname) {
+    return nickname;
+  }
+
+  return friend.displayName;
+}
+
+/**
+ * 친구 별칭을 변경한다.
+ */
+export async function updateFriendNickname(
+  friendUserId: number,
+  nickname: string,
+): Promise<{ friend: Friend | null; errorMessage: string | null }> {
+  const token = await resolveAccessToken();
+
+  if (!token) {
+    return { friend: null, errorMessage: "Authentication required" };
+  }
+
+  const response = await apiFetch(`${getApiUrl()}/api/friends/${friendUserId}/nickname`, {
+    method: "PATCH",
+    headers: authHeaders(token),
+    body: JSON.stringify({ nickname }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return { friend: null, errorMessage: await readApiErrorMessage(response) };
+  }
+
+  return {
+    friend: (await response.json()) as Friend,
+    errorMessage: null,
+  };
+}
+
+/**
+ * 친구 별칭 변경 API 오류 메시지를 사용자 메시지로 변환한다.
+ */
+export function resolveUpdateFriendNicknameErrorMessage(errorMessage: string | null): string {
+  if (!errorMessage) {
+    return "친구 이름 변경에 실패했습니다.";
+  }
+
+  if (errorMessage.includes("Friend not found")) {
+    return "친구를 찾을 수 없습니다.";
+  }
+
+  return errorMessage;
 }
 
 /**

@@ -53,6 +53,7 @@ public class MessageService {
 	private final MessageBroadcastService messageBroadcastService;
 	private final RoomReadStateService roomReadStateService;
 	private final RoomService roomService;
+	private final FriendDisplayNameService friendDisplayNameService;
 
 	/**
 	 * 채팅방 메시지 히스토리를 반환한다.
@@ -76,7 +77,8 @@ public class MessageService {
 		List<Message> ascendingMessages = new ArrayList<>(messages);
 		Collections.reverse(ascendingMessages);
 
-		List<MessageResponse> responses = toMessageResponses(ascendingMessages);
+		Map<Long, String> nicknameMap = friendDisplayNameService.getNicknameMap(userId);
+		List<MessageResponse> responses = toMessageResponses(ascendingMessages, userId, nicknameMap);
 
 		Long peerLastReadMessageId = roomReadStateService.getPeerLastReadMessageId(roomId, userId);
 		List<MemberReadStateResponse> memberReadStates = roomReadStateService.getMemberReadStates(roomId, userId);
@@ -120,7 +122,7 @@ public class MessageService {
 			messageAttachmentRepository.save(Objects.requireNonNull(attachment));
 		}
 
-		MessageResponse response = toMessageResponse(message, attachmentFiles);
+		MessageResponse response = toMessageResponse(message, attachmentFiles, userId);
 
 		roomReadStateService.markAsRead(roomId, userId, message.getId());
 		messageBroadcastService.broadcastMessage(response);
@@ -191,7 +193,11 @@ public class MessageService {
 		messageBroadcastService.broadcastMessageDeleted(new MessageDeletedResponse(roomId, messageId));
 	}
 
-	private List<MessageResponse> toMessageResponses(List<Message> messages) {
+	private List<MessageResponse> toMessageResponses(
+		List<Message> messages,
+		Long viewerUserId,
+		Map<Long, String> nicknameMap
+	) {
 		if (messages.isEmpty()) {
 			return List.of();
 		}
@@ -209,17 +215,20 @@ public class MessageService {
 		return messages.stream()
 			.map(message -> MessageResponse.from(
 				message,
-				attachmentsByMessageId.getOrDefault(message.getId(), List.of())
+				attachmentsByMessageId.getOrDefault(message.getId(), List.of()),
+				viewerUserId,
+				nicknameMap
 			))
 			.toList();
 	}
 
-	private MessageResponse toMessageResponse(Message message, List<StoredFile> attachmentFiles) {
+	private MessageResponse toMessageResponse(Message message, List<StoredFile> attachmentFiles, Long viewerUserId) {
 		List<FileResponse> attachments = attachmentFiles.stream()
 			.map(FileResponse::from)
 			.toList();
+		Map<Long, String> nicknameMap = friendDisplayNameService.getNicknameMap(viewerUserId);
 
-		return MessageResponse.from(message, attachments);
+		return MessageResponse.from(message, attachments, viewerUserId, nicknameMap);
 	}
 
 	private Message getMessageInRoom(Long roomId, Long messageId) {

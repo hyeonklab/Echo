@@ -72,4 +72,17 @@ public class FriendService {
 		friendRepository.delete(Objects.requireNonNull(friend));
 	}
 
+	/**
+	 * 친구 별칭을 변경한다.
+	 */
+	@Transactional
+	public FriendResponse updateFriendNickname(Long ownerUserId, Long friendUserId, String nickname) {
+		Friend friend = friendRepository.findByOwnerIdAndFriendId(ownerUserId, friendUserId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Friend not found"));
+
+		friend.updateNickname(nickname);
+
+		return FriendResponse.from(friend, presenceService.isOnline(friendUserId));
+	}
+
 }

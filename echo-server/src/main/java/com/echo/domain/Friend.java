@@ -41,6 +41,9 @@ public class Friend {
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
+	@Column(name = "nickname", length = 255)
+	private String nickname;
+
 	@Builder
 	public Friend(User owner, User friend) {
 		this.owner = owner;
@@ -52,6 +55,18 @@ public class Friend {
 		if (createdAt == null) {
 			createdAt = Instant.now();
 		}
+	}
+
+	/**
+	 * 친구 별칭을 변경한다. 빈 값이면 별칭을 해제한다.
+	 */
+	public void updateNickname(String nickname) {
+		if (nickname == null || nickname.isBlank()) {
+			this.nickname = null;
+			return;
+		}
+
+		this.nickname = nickname.trim();
 	}
 
 }

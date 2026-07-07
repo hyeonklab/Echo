@@ -52,6 +52,7 @@ public class RoomService {
 	private final UserService userService;
 	private final RoomBroadcastService roomBroadcastService;
 	private final RoomLeaveMessageService roomLeaveMessageService;
+	private final FriendDisplayNameService friendDisplayNameService;
 
 	@PersistenceContext
 	private EntityManager entityManager;
@@ -73,13 +74,15 @@ public class RoomService {
 		Map<Long, Message> lastMessagesByRoomId = messageRepository.findLatestVisibleMessagesByRoomIds(roomIds, userId).stream()
 			.collect(Collectors.toMap(message -> message.getRoom().getId(), message -> message));
 		Map<Long, Integer> unreadCountsByRoomId = roomReadStateService.countUnreadByRoomIds(userId, roomIds);
+		Map<Long, String> nicknameMap = friendDisplayNameService.getNicknameMap(userId);
 
 		return rooms.stream()
 			.map(room -> toRoomResponse(
 				room,
 				userId,
 				lastMessagesByRoomId.get(room.getId()),
-				unreadCountsByRoomId.getOrDefault(room.getId(), 0)
+				unreadCountsByRoomId.getOrDefault(room.getId(), 0),
+				nicknameMap
 			))
 			.sorted((left, right) -> compareByLastActivity(right, left))
 			.toList();
@@ -536,15 +539,34 @@ public class RoomService {
 			room,
 			viewerUserId,
 			findLastMessage(room.getId(), viewerUserId),
-			roomReadStateService.countUnread(room.getId(), viewerUserId)
+			roomReadStateService.countUnread(room.getId(), viewerUserId),
+			friendDisplayNameService.getNicknameMap(viewerUserId)
 		);
 	}
 
 	private RoomResponse toRoomResponse(Room room, Long viewerUserId, Message lastMessage, int unreadCount) {
-		List<RoomMember> members = roomMemberRepository.findAllByRoom_IdOrderByJoinedAtAsc(room.getId());
-		LastMessagePreview lastMessagePreview = lastMessage == null ? null : LastMessagePreview.from(lastMessage);
+		return toRoomResponse(
+			room,
+			viewerUserId,
+			lastMessage,
+			unreadCount,
+			friendDisplayNameService.getNicknameMap(viewerUserId)
+		);
+	}
 
-		return RoomResponse.from(room, members, viewerUserId, lastMessagePreview, unreadCount);
+	private RoomResponse toRoomResponse(
+		Room room,
+		Long viewerUserId,
+		Message lastMessage,
+		int unreadCount,
+		Map<Long, String> nicknameMap
+	) {
+		List<RoomMember> members = roomMemberRepository.findAllByRoom_IdOrderByJoinedAtAsc(room.getId());
+		LastMessagePreview lastMessagePreview = lastMessage == null
+			? null
+			: LastMessagePreview.from(lastMessage, viewerUserId, nicknameMap);
+
+		return RoomResponse.from(room, members, viewerUserId, lastMessagePreview, unreadCount, nicknameMap);
 	}
 
 	private Message findLastMessage(Long roomId, Long viewerUserId) {

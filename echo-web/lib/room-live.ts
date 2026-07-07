@@ -1,6 +1,7 @@
 import type { Message, MessageDeletedEvent } from "@/lib/messages";
 import type { RoomMetaUpdate } from "@/lib/stomp";
 import type { LastMessagePreview, Room } from "@/lib/rooms";
+import { resolveMemberDisplayName } from "@/lib/rooms";
 
 export const ROOM_MESSAGE_EVENT = "echo:room-message";
 export const ROOM_MESSAGE_DELETED_EVENT = "echo:room-message-deleted";
@@ -69,7 +70,7 @@ export function applyIncomingMessageToRooms(
   const lastMessage: LastMessagePreview = {
     id: message.id,
     senderId: message.senderId,
-    senderDisplayName: message.senderDisplayName,
+    senderDisplayName: resolveMemberDisplayName(targetRoom, message.senderId, message.senderDisplayName),
     content: message.content,
     createdAt: message.createdAt,
     messageType: message.messageType,

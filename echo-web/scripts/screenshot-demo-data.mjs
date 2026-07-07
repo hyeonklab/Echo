@@ -128,7 +128,7 @@ export const SCREENSHOT_DEMO_USERS = [
   },
   {
     email: "mom@example.com",
-    displayName: MOTHER_PEER_NAME,
+    displayName: "박순자",
     providerId: "screenshot-family-mom",
     avatar: {
       url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80",
@@ -137,7 +137,7 @@ export const SCREENSHOT_DEMO_USERS = [
   },
   {
     email: "dad@example.com",
-    displayName: "아빠",
+    displayName: "지철수",
     providerId: "screenshot-family-dad",
     avatar: {
       url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",

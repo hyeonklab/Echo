@@ -10,8 +10,11 @@ import {
   Friend,
   addFriend,
   fetchFriends,
+  getFriendDisplayName,
   removeFriend,
   resolveAddFriendErrorMessage,
+  resolveUpdateFriendNicknameErrorMessage,
+  updateFriendNickname,
 } from "@/lib/friends";
 import {
   applyPresenceUpdate,
@@ -52,6 +55,8 @@ export default function FriendList() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pendingDeleteFriend, setPendingDeleteFriend] = useState<Friend | null>(null);
+  const [pendingNicknameFriend, setPendingNicknameFriend] = useState<Friend | null>(null);
+  const [nicknameInput, setNicknameInput] = useState("");
   const [onlineUserIds, setOnlineUserIds] = useState<Set<number>>(new Set());
 
   const friendIdSet = useMemo(() => new Set(friends.map((friend) => friend.id)), [friends]);
@@ -190,6 +195,37 @@ export default function FriendList() {
     setSubmitting(false);
   }
 
+  function handleOpenNicknameEditor(friend: Friend) {
+    setPendingNicknameFriend(friend);
+    setNicknameInput(friend.nickname ?? "");
+    setErrorMessage(null);
+  }
+
+  async function handleConfirmNicknameUpdate() {
+    if (!pendingNicknameFriend) {
+      return;
+    }
+
+    setSubmitting(true);
+    setErrorMessage(null);
+
+    const { friend, errorMessage: apiError } = await updateFriendNickname(
+      pendingNicknameFriend.id,
+      nicknameInput,
+    );
+
+    if (!friend) {
+      setErrorMessage(resolveUpdateFriendNicknameErrorMessage(apiError));
+      setSubmitting(false);
+      return;
+    }
+
+    setFriends((prev) => prev.map((item) => (item.id === friend.id ? friend : item)));
+    setPendingNicknameFriend(null);
+    setNicknameInput("");
+    setSubmitting(false);
+  }
+
   if (loading) {
     return <p className="p-4 text-sm text-zinc-500">친구 목록 불러오는 중...</p>;
   }
@@ -310,26 +346,37 @@ export default function FriendList() {
               ) : (
                 friends.map((friend) => {
                   const isOnline = onlineUserIds.has(friend.id);
+                  const friendName = getFriendDisplayName(friend);
+                  const hasCustomNickname = Boolean(friend.nickname?.trim());
 
                   return (
                     <li key={friend.id} className="flex items-center gap-3 px-4 py-3">
                       <UserAvatar
-                        displayName={friend.displayName}
+                        displayName={friendName}
                         avatarFileId={friend.avatarFileId}
                       />
                       <div className="min-w-0 flex-1">
                         <p className="flex items-center gap-2 truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
                           <OnlineStatusDot online={isOnline} />
-                          <span className="truncate">{friend.displayName}</span>
+                          <span className="truncate">{friendName}</span>
                         </p>
                         <p className="truncate text-xs text-zinc-500">
                           <span className={isOnline ? "text-emerald-600 dark:text-emerald-400" : ""}>
                             {getOnlineStatusLabel(isOnline)}
                           </span>
+                          {hasCustomNickname ? ` · 원래 이름 ${friend.displayName}` : null}
                           {friend.email ? ` · ${friend.email}` : null}
                         </p>
                       </div>
                       <div className="flex shrink-0 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenNicknameEditor(friend)}
+                          disabled={submitting}
+                          className="rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                        >
+                          이름
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleStartDm(friend)}
@@ -358,7 +405,7 @@ export default function FriendList() {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
               <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
                 <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                  {pendingDeleteFriend.displayName}님을 친구 목록에서 삭제할까요?
+                  {getFriendDisplayName(pendingDeleteFriend)}님을 친구 목록에서 삭제할까요?
                 </p>
                 <div className="mt-4 flex justify-end gap-2">
                   <button
@@ -376,6 +423,49 @@ export default function FriendList() {
                     className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
                   >
                     삭제
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {pendingNicknameFriend ? (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+              <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                  친구 이름 변경
+                </p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  원래 이름: {pendingNicknameFriend.displayName}
+                </p>
+                <input
+                  type="text"
+                  value={nicknameInput}
+                  onChange={(event) => setNicknameInput(event.target.value)}
+                  placeholder="비우면 원래 이름으로 표시"
+                  maxLength={255}
+                  className="mt-3 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+                  disabled={submitting}
+                />
+                <div className="mt-4 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPendingNicknameFriend(null);
+                      setNicknameInput("");
+                    }}
+                    disabled={submitting}
+                    className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 dark:border-zinc-600 dark:text-zinc-200"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmNicknameUpdate}
+                    disabled={submitting}
+                    className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+                  >
+                    저장
                   </button>
                 </div>
               </div>

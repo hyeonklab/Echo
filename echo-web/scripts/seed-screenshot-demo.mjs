@@ -8,6 +8,7 @@ import {
   GROUP_CHAT_ROOM_NAME,
   IMAGE_PREVIEW_PEER_NAME,
   LINK_PREVIEW_PEER_NAME,
+  MOTHER_PEER_NAME,
   PUBLIC_DEMO_IMAGE_SOURCES,
   SCREENSHOT_DEMO_EMAIL,
   SCREENSHOT_DEMO_USERS,
@@ -344,6 +345,13 @@ async function seedDemoContent(env, secret, apiUrl) {
       targetUserId: usersByEmail[user.email].id,
     });
   }
+
+  await apiJson(`${apiUrl}/api/friends/${mom.id}/nickname`, demoUser.accessToken, "PATCH", {
+    nickname: MOTHER_PEER_NAME,
+  });
+  await apiJson(`${apiUrl}/api/friends/${dad.id}/nickname`, demoUser.accessToken, "PATCH", {
+    nickname: "아빠",
+  });
 
   // 오래된 방부터 시드 (최근 메시지가 목록 상단에 오도록)
   const selfRoom = await createDmRoom(apiUrl, demoUser.accessToken, demoUser.id);

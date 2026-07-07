@@ -1363,7 +1363,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
                   >
                     {!isMine && showSenderAvatar && room.type === "GROUP" ? (
                       <p className="mb-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                        {message.senderDisplayName}
+                        {senderMember?.displayName ?? message.senderDisplayName}
                       </p>
                     ) : null}
                     <MessageContent

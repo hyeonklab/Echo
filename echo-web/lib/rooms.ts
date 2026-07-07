@@ -91,6 +91,23 @@ export function getRoomDisplayName(room: Room, currentUserId: number): string {
 }
 
 /**
+ * 채팅방 멤버 표시 이름을 반환한다.
+ */
+export function resolveMemberDisplayName(
+  room: Room,
+  userId: number,
+  fallback: string,
+): string {
+  const member = room.members.find((item) => item.userId === userId);
+
+  if (!member) {
+    return fallback;
+  }
+
+  return member.displayName;
+}
+
+/**
  * 그룹 채팅방 멤버 초대 가능 여부를 반환한다.
  */
 export function canInviteToRoom(type: RoomType): boolean {

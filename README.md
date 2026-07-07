@@ -32,6 +32,14 @@
 | :---: |
 | ![우리집](docs/screenshots/chat-room-family.png) |
 
+## 테마 (다크 / 라이트 / 시스템)
+
+홈·로그인·사이드바에서 테마를 바꿀 수 있습니다. 기본값은 다크이며, 시스템 선택 시 OS 설정을 따릅니다.
+
+| 라이트 | 다크 |
+| :---: | :---: |
+| ![테마 라이트](docs/screenshots/theme-light.png) | ![테마 다크](docs/screenshots/theme-dark.png) |
+
 > 스크린샷 재생성: `echo-server`·`echo-web`·PostgreSQL 실행 후 `cd echo-web && npm run screenshots`  
 > (최초 1회 `npm run screenshots:install` 필요. 더미 계정·대화는 `screenshots:seed`로 자동 생성됩니다.)
 
@@ -332,7 +340,7 @@ npm run screenshots:install   # 최초 1회
 npm run screenshots
 ```
 
-`docs/screenshots/*.png` (다크 모드)가 생성됩니다. JWT는 Echo 루트 `.env`의 `JWT_SECRET`으로 더미 사용자에 대해 발급합니다.
+`docs/screenshots/*.png`가 생성됩니다. JWT는 Echo 루트 `.env`의 `JWT_SECRET`으로 더미 사용자에 대해 발급합니다. 기본 UI 캡처는 다크 모드이며, `theme-light.png`·`theme-dark.png`는 테마 비교용입니다.
 
 ---
 

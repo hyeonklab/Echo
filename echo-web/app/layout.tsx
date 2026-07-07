@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import MessageNotificationListener from "@/components/MessageNotificationListener";
 import PresenceListener from "@/components/PresenceListener";
+import ThemeProvider from "@/components/ThemeProvider";
+
+import { THEME_STORAGE_KEY } from "@/lib/theme";
 
 import "./globals.css";
 
@@ -25,6 +28,30 @@ export const metadata: Metadata = {
   },
 };
 
+const themeInitScript = `
+(function () {
+  try {
+    var theme = localStorage.getItem("${THEME_STORAGE_KEY}") || "dark";
+    var resolved = theme;
+
+    if (theme === "system") {
+      resolved = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+
+    if (resolved === "dark") {
+      document.documentElement.classList.add("dark");
+      document.documentElement.style.colorScheme = "dark";
+      document.documentElement.dataset.theme = theme;
+      return;
+    }
+
+    document.documentElement.classList.remove("dark");
+    document.documentElement.style.colorScheme = "light";
+    document.documentElement.dataset.theme = theme;
+  } catch (_) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,10 +63,15 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="h-full min-h-full" suppressHydrationWarning>
-        <MessageNotificationListener />
-        <PresenceListener />
-        {children}
+        <ThemeProvider>
+          <MessageNotificationListener />
+          <PresenceListener />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

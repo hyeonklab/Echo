@@ -1,5 +1,6 @@
 import { getOAuthLoginUrl, IS_NAVER_LOGIN_ENABLED } from "@/lib/auth";
 import AppLogo from "@/components/AppLogo";
+import ThemeToggle from "@/components/ThemeToggle";
 
 type LoginPanelProps = {
   errorCode?: string | null;
@@ -54,6 +55,11 @@ export default function LoginPanel({ errorCode = null }: Readonly<LoginPanelProp
             Naver로 계속하기
           </a>
         ) : null}
+      </div>
+
+      <div className="flex items-center justify-between gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-700">
+        <span className="text-sm text-zinc-600 dark:text-zinc-400">테마</span>
+        <ThemeToggle />
       </div>
     </div>
   );

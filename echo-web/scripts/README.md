@@ -21,4 +21,4 @@ npm run screenshots           # 더미 시드 + PNG 캡처
 | `screenshot-demo-data.mjs` | 더미 사용자·대화·이미지 URL 정의 |
 | `seed-screenshot-demo.mjs` | DB 시드 및 API로 채팅방·메시지 생성 |
 | `readme-screenshot-auth.mjs` | 데모 계정 JWT 발급, base URL 해석 |
-| `capture-readme-screenshots.mjs` | Playwright로 화면 캡처 |
+| `capture-readme-screenshots.mjs` | Playwright로 화면 캡처 (`theme-light`·`theme-dark` 포함) |

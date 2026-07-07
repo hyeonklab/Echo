@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type ChangeEvent, type SubmitEvent, useEffect, useRef, useState } from "react";
 
 import LoginPanel from "@/components/LoginPanel";
+import ThemeToggle from "@/components/ThemeToggle";
 import UserAvatar from "@/components/UserAvatar";
 import {
   AuthUser,
@@ -266,6 +267,12 @@ export default function HomeAuth() {
         <div className="flex items-center gap-4">
           <dt className="w-14 shrink-0 text-zinc-500">제공자</dt>
           <dd className="font-medium text-zinc-900 dark:text-zinc-100">{user.provider}</dd>
+        </div>
+        <div className="flex items-center gap-4">
+          <dt className="w-14 shrink-0 text-zinc-500">테마</dt>
+          <dd>
+            <ThemeToggle />
+          </dd>
         </div>
       </dl>
       <div className="flex flex-wrap gap-3 pt-2">

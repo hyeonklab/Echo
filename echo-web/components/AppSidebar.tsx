@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import AppLogo from "@/components/AppLogo";
+import ThemeToggle from "@/components/ThemeToggle";
 import { formatUnreadCount } from "@/lib/room-live";
 import { useChatUnreadCount } from "@/lib/use-chat-unread-count";
 
@@ -73,6 +74,9 @@ export default function AppSidebar() {
           </svg>
         </SidebarItem>
       </nav>
+      <div className="mt-auto pt-4">
+        <ThemeToggle variant="icon" />
+      </div>
     </aside>
   );
 }

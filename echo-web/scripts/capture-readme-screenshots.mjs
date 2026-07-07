@@ -22,10 +22,16 @@ const outputDir = path.join(repoRoot, "docs", "screenshots");
 const viewport = { width: 1440, height: 900 };
 
 const screenshots = [
-  { name: "login", path: "/login", requiresAuth: false },
-  { name: "home", path: "/home", requiresAuth: true },
-  { name: "friends", path: "/friends", requiresAuth: true },
-  { name: "chat-list", path: "/chat", requiresAuth: true },
+  { name: "login", path: "/login", requiresAuth: false, theme: "dark" },
+  { name: "home", path: "/home", requiresAuth: true, theme: "dark" },
+  { name: "friends", path: "/friends", requiresAuth: true, theme: "dark" },
+  { name: "chat-list", path: "/chat", requiresAuth: true, theme: "dark" },
+];
+
+/** 테마 소개 스크린샷 (홈 프로필의 테마 선택 UI) */
+const themeScreenshots = [
+  { name: "theme-light", path: "/home", requiresAuth: true, theme: "light", colorScheme: "light" },
+  { name: "theme-dark", path: "/home", requiresAuth: true, theme: "dark", colorScheme: "dark" },
 ];
 
 /** README 채팅방 스크린샷 */
@@ -120,6 +126,27 @@ async function injectAuthTokens(context, accessToken, refreshToken) {
 }
 
 /**
+ * localStorage에 테마를 주입한다. (첫 navigation 전에 등록)
+ */
+async function injectThemePreference(context, theme) {
+  await context.addInitScript((themeValue) => {
+    const storageKey = "echo-theme";
+
+    localStorage.setItem(storageKey, themeValue);
+
+    let resolved = themeValue;
+
+    if (themeValue === "system") {
+      resolved = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+
+    document.documentElement.classList.toggle("dark", resolved === "dark");
+    document.documentElement.style.colorScheme = resolved;
+    document.documentElement.dataset.theme = themeValue;
+  }, theme);
+}
+
+/**
  * 인증이 필요한 화면이 준비될 때까지 대기한다.
  */
 async function waitForAuthenticatedScreen(page, target) {
@@ -131,6 +158,8 @@ async function waitForAuthenticatedScreen(page, target) {
     home: "text=로그인됨",
     friends: "h1:has-text('친구')",
     "chat-list": "text=내 채팅방",
+    "theme-light": "[aria-label='테마 선택']",
+    "theme-dark": "[aria-label='테마 선택']",
     "chat-room-link-preview": "input[placeholder='메시지를 입력하세요']",
     "chat-room-image-preview": "input[placeholder='메시지를 입력하세요']",
     "chat-room-group": "input[placeholder='메시지를 입력하세요']",
@@ -192,9 +221,13 @@ async function waitForChatRoomContent(page, target) {
 async function captureScreenshot(browser, baseUrl, target, accessToken, refreshToken) {
   const context = await browser.newContext({
     viewport,
-    colorScheme: "dark",
+    colorScheme: target.colorScheme ?? "dark",
     deviceScaleFactor: 1,
   });
+
+  if (target.theme) {
+    await injectThemePreference(context, target.theme);
+  }
 
   if (target.requiresAuth) {
     await injectAuthTokens(context, accessToken, refreshToken);
@@ -204,6 +237,19 @@ async function captureScreenshot(browser, baseUrl, target, accessToken, refreshT
 
   await page.goto(`${baseUrl}${target.path}`, { waitUntil: "domcontentloaded" });
   await waitForAuthenticatedScreen(page, target);
+
+  if (target.name === "theme-light" || target.name === "theme-dark") {
+    const expectedTheme = target.theme;
+    const hasDarkClass = await page.evaluate(() => document.documentElement.classList.contains("dark"));
+
+    if (expectedTheme === "light" && hasDarkClass) {
+      throw new Error(`${target.name} 캡처 실패: 라이트 테마인데 html에 dark 클래스가 남아 있습니다.`);
+    }
+
+    if (expectedTheme === "dark" && !hasDarkClass) {
+      throw new Error(`${target.name} 캡처 실패: 다크 테마인데 html에 dark 클래스가 없습니다.`);
+    }
+  }
 
   if (target.roomId != null) {
     await waitForChatRoomContent(page, target);
@@ -233,6 +279,11 @@ async function main() {
       console.log(`saved ${outputPath}`);
     }
 
+    for (const target of themeScreenshots) {
+      const outputPath = await captureScreenshot(browser, baseUrl, target, accessToken, refreshToken);
+      console.log(`saved ${outputPath} (theme=${target.theme})`);
+    }
+
     for (const roomTarget of chatRoomScreenshots) {
       const roomId = await resolveDemoRoomId(
         apiUrl,
@@ -252,6 +303,7 @@ async function main() {
           name: roomTarget.name,
           path: `/chat/${roomId}`,
           requiresAuth: true,
+          theme: "dark",
           roomId,
           readyAfterInput: roomTarget.readyAfterInput,
         },

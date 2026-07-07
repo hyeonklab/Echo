@@ -9,6 +9,7 @@ import {
   IMAGE_PREVIEW_PEER_NAME,
   LINK_PREVIEW_PEER_NAME,
   MOTHER_PEER_NAME,
+  PROFESSOR_PEER_NAME,
   PUBLIC_DEMO_IMAGE_SOURCES,
   SCREENSHOT_DEMO_EMAIL,
   SCREENSHOT_DEMO_USERS,
@@ -351,6 +352,9 @@ async function seedDemoContent(env, secret, apiUrl) {
   });
   await apiJson(`${apiUrl}/api/friends/${dad.id}/nickname`, demoUser.accessToken, "PATCH", {
     nickname: "아빠",
+  });
+  await apiJson(`${apiUrl}/api/friends/${professor.id}/nickname`, demoUser.accessToken, "PATCH", {
+    nickname: PROFESSOR_PEER_NAME,
   });
 
   // 오래된 방부터 시드 (최근 메시지가 목록 상단에 오도록)

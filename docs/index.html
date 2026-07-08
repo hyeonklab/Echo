@@ -158,6 +158,24 @@
       border-radius: 1rem;
       overflow: hidden;
       box-shadow: var(--shadow);
+      cursor: zoom-in;
+    }
+
+    .screen-card button {
+      display: block;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: none;
+      cursor: zoom-in;
+      text-align: inherit;
+      font: inherit;
+      color: inherit;
+    }
+
+    .screen-card button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
     }
 
     .screen-card img {
@@ -277,6 +295,106 @@
         max-width: none;
       }
     }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 1.5rem;
+      background: rgba(9, 9, 11, 0.92);
+    }
+
+    .lightbox[hidden] {
+      display: none;
+    }
+
+    .lightbox-image {
+      max-width: min(100%, 72rem);
+      max-height: calc(100vh - 5rem);
+      width: auto;
+      height: auto;
+      border-radius: 0.75rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    }
+
+    .lightbox-caption {
+      margin: 0;
+      color: #e4e4e7;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fafafa;
+      font-size: 1.5rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .lightbox-close:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2.75rem;
+      height: 2.75rem;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fafafa;
+      font-size: 1.75rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .lightbox-nav:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .lightbox-nav:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    .lightbox-prev {
+      left: 1rem;
+    }
+
+    .lightbox-next {
+      right: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .lightbox-nav {
+        width: 2.25rem;
+        height: 2.25rem;
+        font-size: 1.4rem;
+      }
+
+      .lightbox-prev {
+        left: 0.5rem;
+      }
+
+      .lightbox-next {
+        right: 0.5rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -298,51 +416,73 @@
 
     <section aria-labelledby="screens-title">
       <h2 id="screens-title">주요 화면</h2>
-      <p class="section-desc">로그인부터 채팅방까지, Echo의 핵심 화면을 미리 볼 수 있습니다.</p>
+      <p class="section-desc">로그인부터 채팅방까지, Echo의 핵심 화면을 미리 볼 수 있습니다. 화면을 클릭하면 크게 볼 수 있습니다.</p>
 
       <div class="screen-grid">
         <figure class="screen-card">
-          <img src="./screenshots/login.png" alt="로그인 화면" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/login.png" data-lightbox-caption="로그인" data-lightbox-alt="로그인 화면">
+            <img src="./screenshots/login.png" alt="로그인 화면" loading="lazy" />
+          </button>
           <figcaption>로그인</figcaption>
         </figure>
         <figure class="screen-card">
-          <img src="./screenshots/home.png" alt="홈 화면" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/home.png" data-lightbox-caption="홈" data-lightbox-alt="홈 화면">
+            <img src="./screenshots/home.png" alt="홈 화면" loading="lazy" />
+          </button>
           <figcaption>홈</figcaption>
         </figure>
         <figure class="screen-card">
-          <img src="./screenshots/friends.png" alt="친구 목록 화면" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/friends.png" data-lightbox-caption="친구" data-lightbox-alt="친구 목록 화면">
+            <img src="./screenshots/friends.png" alt="친구 목록 화면" loading="lazy" />
+          </button>
           <figcaption>친구</figcaption>
         </figure>
         <figure class="screen-card">
-          <img src="./screenshots/chat-list.png" alt="채팅 목록 화면" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/chat-list.png" data-lightbox-caption="채팅 목록" data-lightbox-alt="채팅 목록 화면">
+            <img src="./screenshots/chat-list.png" alt="채팅 목록 화면" loading="lazy" />
+          </button>
           <figcaption>채팅 목록</figcaption>
         </figure>
         <figure class="screen-card">
-          <img src="./screenshots/chat-room-link-preview.png" alt="링크 미리보기가 있는 채팅방" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/chat-room-link-preview.png" data-lightbox-caption="링크 미리보기" data-lightbox-alt="링크 미리보기가 있는 채팅방">
+            <img src="./screenshots/chat-room-link-preview.png" alt="링크 미리보기가 있는 채팅방" loading="lazy" />
+          </button>
           <figcaption>링크 미리보기</figcaption>
         </figure>
         <figure class="screen-card">
-          <img src="./screenshots/chat-room-image-preview.png" alt="사진이 첨부된 채팅방" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/chat-room-image-preview.png" data-lightbox-caption="사진 보내기" data-lightbox-alt="사진이 첨부된 채팅방">
+            <img src="./screenshots/chat-room-image-preview.png" alt="사진이 첨부된 채팅방" loading="lazy" />
+          </button>
           <figcaption>사진 보내기</figcaption>
         </figure>
         <figure class="screen-card">
-          <img src="./screenshots/chat-room-group.png" alt="그룹 채팅방" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/chat-room-group.png" data-lightbox-caption="그룹 채팅" data-lightbox-alt="그룹 채팅방">
+            <img src="./screenshots/chat-room-group.png" alt="그룹 채팅방" loading="lazy" />
+          </button>
           <figcaption>그룹 채팅</figcaption>
         </figure>
         <figure class="screen-card">
-          <img src="./screenshots/chat-room-girlfriend.png" alt="1:1 DM 채팅방" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/chat-room-girlfriend.png" data-lightbox-caption="1:1 대화" data-lightbox-alt="1:1 DM 채팅방">
+            <img src="./screenshots/chat-room-girlfriend.png" alt="1:1 DM 채팅방" loading="lazy" />
+          </button>
           <figcaption>1:1 대화</figcaption>
         </figure>
         <figure class="screen-card">
-          <img src="./screenshots/chat-room-professor.png" alt="교수님과의 DM" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/chat-room-professor.png" data-lightbox-caption="친구 별칭 표시" data-lightbox-alt="교수님과의 DM">
+            <img src="./screenshots/chat-room-professor.png" alt="교수님과의 DM" loading="lazy" />
+          </button>
           <figcaption>친구 별칭 표시</figcaption>
         </figure>
         <figure class="screen-card">
-          <img src="./screenshots/chat-room-club.png" alt="동아리 그룹 채팅방" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/chat-room-club.png" data-lightbox-caption="동아리 단톡" data-lightbox-alt="동아리 그룹 채팅방">
+            <img src="./screenshots/chat-room-club.png" alt="동아리 그룹 채팅방" loading="lazy" />
+          </button>
           <figcaption>동아리 단톡</figcaption>
         </figure>
         <figure class="screen-card wide">
-          <img src="./screenshots/chat-room-family.png" alt="가족 단톡방" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/chat-room-family.png" data-lightbox-caption="가족 단톡" data-lightbox-alt="가족 단톡방">
+            <img src="./screenshots/chat-room-family.png" alt="가족 단톡방" loading="lazy" />
+          </button>
           <figcaption>가족 단톡</figcaption>
         </figure>
       </div>
@@ -438,11 +578,15 @@
 
       <div class="screen-grid">
         <figure class="screen-card">
-          <img src="./screenshots/theme-light.png" alt="라이트 테마 홈 화면" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/theme-light.png" data-lightbox-caption="라이트" data-lightbox-alt="라이트 테마 홈 화면">
+            <img src="./screenshots/theme-light.png" alt="라이트 테마 홈 화면" loading="lazy" />
+          </button>
           <figcaption>라이트</figcaption>
         </figure>
         <figure class="screen-card">
-          <img src="./screenshots/theme-dark.png" alt="다크 테마 홈 화면" loading="lazy" />
+          <button type="button" data-lightbox-src="./screenshots/theme-dark.png" data-lightbox-caption="다크" data-lightbox-alt="다크 테마 홈 화면">
+            <img src="./screenshots/theme-dark.png" alt="다크 테마 홈 화면" loading="lazy" />
+          </button>
           <figcaption>다크</figcaption>
         </figure>
       </div>
@@ -457,5 +601,108 @@
       </div>
     </footer>
   </div>
+
+  <div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-label="화면 확대 보기">
+    <button type="button" class="lightbox-close" aria-label="닫기">×</button>
+    <button type="button" class="lightbox-nav lightbox-prev" aria-label="이전 화면">‹</button>
+    <img class="lightbox-image" src="" alt="" />
+    <p class="lightbox-caption"></p>
+    <button type="button" class="lightbox-nav lightbox-next" aria-label="다음 화면">›</button>
+  </div>
+
+  <script>
+    (function () {
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImage = lightbox.querySelector(".lightbox-image");
+      const lightboxCaption = lightbox.querySelector(".lightbox-caption");
+      const closeButton = lightbox.querySelector(".lightbox-close");
+      const prevButton = lightbox.querySelector(".lightbox-prev");
+      const nextButton = lightbox.querySelector(".lightbox-next");
+      const triggers = Array.from(document.querySelectorAll("[data-lightbox-src]"));
+      let currentIndex = 0;
+      let lastTrigger = null;
+
+      function updateNavButtons() {
+        prevButton.disabled = currentIndex <= 0;
+        nextButton.disabled = currentIndex >= triggers.length - 1;
+      }
+
+      function showSlide(index) {
+        const trigger = triggers[index];
+
+        if (!trigger) {
+          return;
+        }
+
+        currentIndex = index;
+        lastTrigger = trigger;
+        lightboxImage.src = trigger.dataset.lightboxSrc;
+        lightboxImage.alt = trigger.dataset.lightboxAlt ?? "";
+        lightboxCaption.textContent = trigger.dataset.lightboxCaption ?? "";
+        updateNavButtons();
+      }
+
+      function openLightbox(trigger) {
+        const index = triggers.indexOf(trigger);
+
+        if (index < 0) {
+          return;
+        }
+
+        showSlide(index);
+        lightbox.hidden = false;
+        document.body.style.overflow = "hidden";
+        closeButton.focus();
+      }
+
+      function closeLightbox() {
+        lightbox.hidden = true;
+        lightboxImage.removeAttribute("src");
+        document.body.style.overflow = "";
+        lastTrigger?.focus();
+        lastTrigger = null;
+      }
+
+      function moveSlide(delta) {
+        showSlide(currentIndex + delta);
+      }
+
+      triggers.forEach((trigger) => {
+        trigger.addEventListener("click", () => openLightbox(trigger));
+      });
+
+      closeButton.addEventListener("click", closeLightbox);
+      prevButton.addEventListener("click", () => moveSlide(-1));
+      nextButton.addEventListener("click", () => moveSlide(1));
+
+      lightbox.addEventListener("click", (event) => {
+        if (event.target === lightbox) {
+          closeLightbox();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (lightbox.hidden) {
+          return;
+        }
+
+        if (event.key === "Escape") {
+          closeLightbox();
+          return;
+        }
+
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          moveSlide(-1);
+          return;
+        }
+
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          moveSlide(1);
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

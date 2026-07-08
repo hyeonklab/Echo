@@ -6,7 +6,7 @@ import LinkPreviewCard from "@/components/LinkPreviewCard";
 import MessageContent from "@/components/MessageContent";
 import RoomAvatar from "@/components/RoomAvatar";
 import UserAvatar from "@/components/UserAvatar";
-import { type ChangeEvent, type DragEvent, type MouseEvent, type SubmitEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, type ChangeEvent, type DragEvent, type MouseEvent, type SubmitEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AuthUser, requireSessionUser } from "@/lib/auth";
@@ -240,6 +240,64 @@ function scrollMessagesToBottom(
 }
 
 /**
+ * 지정한 메시지가 보이도록 스크롤한다.
+ */
+function scrollToMessage(
+  container: HTMLDivElement,
+  messageId: number,
+  ignoreScrollEventsRef: { current: boolean },
+) {
+  const element =
+    container.querySelector(`[data-unread-marker-for="${messageId}"]`)
+    ?? container.querySelector(`[data-message-id="${messageId}"]`);
+
+  if (!element) {
+    return;
+  }
+
+  ignoreScrollEventsRef.current = true;
+  element.scrollIntoView({ block: "start", behavior: "auto" });
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      ignoreScrollEventsRef.current = false;
+    });
+  });
+}
+
+/**
+ * 첫 안 읽은 메시지 인덱스를 반환한다.
+ */
+function findFirstUnreadMessageIndex(messages: Message[], lastReadMessageId: number | null): number {
+  const threshold = lastReadMessageId ?? 0;
+
+  return messages.findIndex((message) => message.id > threshold);
+}
+
+type UnreadMessagesDividerProps = {
+  markerForMessageId: number;
+};
+
+/**
+ * 안 읽은 메시지 시작 지점 구분선.
+ */
+function UnreadMessagesDivider({ markerForMessageId }: Readonly<UnreadMessagesDividerProps>) {
+  return (
+    <div
+      className="flex items-center gap-3 py-2"
+      role="separator"
+      aria-label="새 메시지"
+      data-unread-marker-for={markerForMessageId}
+    >
+      <div className="h-px flex-1 bg-sky-300 dark:bg-sky-600" />
+      <span className="shrink-0 text-[11px] font-medium tracking-wide text-sky-600 dark:text-sky-400">
+        새 메시지
+      </span>
+      <div className="h-px flex-1 bg-sky-300 dark:bg-sky-600" />
+    </div>
+  );
+}
+
+/**
  * 메시지 목록이 하단 근처인지 확인한다.
  */
 function isNearScrollBottom(container: HTMLDivElement, threshold = SCROLL_BOTTOM_THRESHOLD) {
@@ -262,6 +320,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   const stickToBottomRef = useRef(true);
   const forceStickToBottomUntilRef = useRef(0);
   const ignoreScrollEventsRef = useRef(false);
+  const initialScrollAppliedRef = useRef(false);
   const refocusInputAfterSendRef = useRef(false);
   const [room, setRoom] = useState<Room | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
@@ -299,6 +358,30 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   const [leavingRoom, setLeavingRoom] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState<number | null>(null);
 
+  const firstUnreadDividerIndex = useMemo(() => {
+    if (!currentUser || messages.length === 0) {
+      return null;
+    }
+
+    const myLastReadMessageId = memberReadStates.find((item) => item.userId === currentUser.id)?.lastReadMessageId ?? null;
+    const firstUnreadIndex = findFirstUnreadMessageIndex(messages, myLastReadMessageId);
+    const latestMessageId = messages[messages.length - 1].id;
+
+    if (firstUnreadIndex < 0 || (myLastReadMessageId ?? 0) >= latestMessageId) {
+      return null;
+    }
+
+    const hasUnreadFromOthers = messages
+      .slice(firstUnreadIndex)
+      .some((message) => message.senderId !== currentUser.id);
+
+    if (!hasUnreadFromOthers) {
+      return null;
+    }
+
+    return firstUnreadIndex;
+  }, [currentUser, memberReadStates, messages]);
+
   useEffect(() => {
     lastMarkedMessageIdRef.current = null;
     setMessages([]);
@@ -309,6 +392,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     stickToBottomRef.current = true;
     forceStickToBottomUntilRef.current = Date.now() + FORCE_STICK_TO_BOTTOM_MS;
     lastTrackedMessageIdRef.current = null;
+    initialScrollAppliedRef.current = false;
     setPendingAttachments((prev) => {
       for (const attachment of prev) {
         URL.revokeObjectURL(attachment.previewUrl);
@@ -462,8 +546,14 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     };
   }, [pendingDeleteMessage, deletingMessageId]);
 
-  useEffect(() => {
-    if (loading || !currentUser || messages.length === 0) {
+  const tryMarkLatestAsRead = useCallback(() => {
+    if (!currentUser || messages.length === 0) {
+      return;
+    }
+
+    const container = messagesScrollRef.current;
+
+    if (!container || !isNearScrollBottom(container)) {
       return;
     }
 
@@ -477,6 +567,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
 
     void markRoomRead(roomId, latestMessage.id).then((success) => {
       if (!success) {
+        lastMarkedMessageIdRef.current = null;
         return;
       }
 
@@ -485,8 +576,23 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
         userId: currentUser.id,
         lastReadMessageId: latestMessage.id,
       });
+
+      setMemberReadStates((prev) => {
+        const exists = prev.some((item) => item.userId === currentUser.id);
+
+        if (exists) {
+          return prev.map((item) =>
+            item.userId === currentUser.id
+              ? { ...item, lastReadMessageId: latestMessage.id }
+              : item,
+          );
+        }
+
+        return [...prev, { userId: currentUser.id, lastReadMessageId: latestMessage.id }];
+      });
+      setRoom((prev) => (prev ? { ...prev, unreadCount: 0 } : prev));
     });
-  }, [currentUser, loading, messages, roomId]);
+  }, [currentUser, messages, roomId]);
 
   useEffect(() => {
     if (loading || !currentUser) {
@@ -578,17 +684,33 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
   }, [sendingMessage]);
 
   useEffect(() => {
-    if (loading) {
+    if (loading || !currentUser || messages.length === 0 || initialScrollAppliedRef.current) {
+      return;
+    }
+
+    const container = messagesScrollRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    initialScrollAppliedRef.current = true;
+
+    if (firstUnreadDividerIndex !== null) {
+      stickToBottomRef.current = false;
+      forceStickToBottomUntilRef.current = 0;
+      scrollToMessage(container, messages[firstUnreadDividerIndex].id, ignoreScrollEventsRef);
       return;
     }
 
     stickToBottomRef.current = true;
     forceStickToBottomUntilRef.current = Date.now() + FORCE_STICK_TO_BOTTOM_MS;
-    scrollMessagesToBottom(messagesScrollRef.current, ignoreScrollEventsRef);
+    scrollMessagesToBottom(container, ignoreScrollEventsRef);
     requestAnimationFrame(() => {
-      scrollMessagesToBottom(messagesScrollRef.current, ignoreScrollEventsRef);
+      scrollMessagesToBottom(container, ignoreScrollEventsRef);
+      tryMarkLatestAsRead();
     });
-  }, [loading, roomId]);
+  }, [currentUser, firstUnreadDividerIndex, loading, messages, roomId, tryMarkLatestAsRead]);
 
   useEffect(() => {
     if (loading || messages.length === 0) {
@@ -610,8 +732,9 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     scrollMessagesToBottom(messagesScrollRef.current, ignoreScrollEventsRef);
     requestAnimationFrame(() => {
       scrollMessagesToBottom(messagesScrollRef.current, ignoreScrollEventsRef);
+      tryMarkLatestAsRead();
     });
-  }, [messages, loading]);
+  }, [messages, loading, tryMarkLatestAsRead]);
 
   useEffect(() => {
     const container = messagesScrollRef.current;
@@ -625,7 +748,12 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
         return;
       }
 
-      stickToBottomRef.current = isNearScrollBottom(container);
+      const nearBottom = isNearScrollBottom(container);
+      stickToBottomRef.current = nearBottom;
+
+      if (nearBottom) {
+        tryMarkLatestAsRead();
+      }
     }
 
     container.addEventListener("scroll", handleScroll, { passive: true });
@@ -633,7 +761,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
     return () => {
       container.removeEventListener("scroll", handleScroll);
     };
-  }, [loading, roomId]);
+  }, [loading, roomId, tryMarkLatestAsRead]);
 
   useEffect(() => {
     const content = messagesContentRef.current;
@@ -1310,13 +1438,20 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
             <p className="text-center text-sm text-zinc-500">아직 메시지가 없습니다. 첫 메시지를 보내 보세요.</p>
           ) : (
             messages.map((message, index) => {
+              const showUnreadDivider = firstUnreadDividerIndex === index;
+
               if (message.messageType === "ROOM_LEAVE") {
                 return (
-                  <div key={message.id} className="flex justify-center py-1">
-                    <p className="rounded-full bg-zinc-200 px-3 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                      {message.content}
-                    </p>
-                  </div>
+                  <Fragment key={message.id}>
+                    {showUnreadDivider ? (
+                      <UnreadMessagesDivider markerForMessageId={message.id} />
+                    ) : null}
+                    <div data-message-id={message.id} className="flex justify-center py-1">
+                      <p className="rounded-full bg-zinc-200 px-3 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        {message.content}
+                      </p>
+                    </div>
+                  </Fragment>
                 );
               }
 
@@ -1335,7 +1470,14 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
               );
 
               return (
-                <div key={message.id} className={`flex items-end gap-1.5 ${isMine ? "justify-end" : "justify-start"}`}>
+                <Fragment key={message.id}>
+                  {showUnreadDivider ? (
+                    <UnreadMessagesDivider markerForMessageId={message.id} />
+                  ) : null}
+                  <div
+                    data-message-id={message.id}
+                    className={`flex items-end gap-1.5 ${isMine ? "justify-end" : "justify-start"}`}
+                  >
                   {!isMine ? (
                     showSenderAvatar ? (
                       <UserAvatar
@@ -1381,6 +1523,7 @@ export default function ChatRoomView({ roomId }: Readonly<ChatRoomViewProps>) {
                     </p>
                   </div>
                 </div>
+                </Fragment>
               );
             })
           )}

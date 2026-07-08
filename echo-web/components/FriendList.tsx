@@ -312,29 +312,33 @@ export default function FriendList() {
 
             <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
               {currentUser ? (
-                <li className="flex items-center gap-3 px-4 py-3">
-                  <UserAvatar
-                    displayName={currentUser.displayName}
-                    avatarFileId={currentUser.avatarFileId}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                      <OnlineStatusDot online={isSelfOnline} />
-                      <span className="truncate">{currentUser.displayName}</span>
-                      <span className="text-xs font-normal text-zinc-400">나</span>
-                    </p>
-                    <p className="truncate text-xs text-zinc-500">
-                      <span className={isSelfOnline ? "text-emerald-600 dark:text-emerald-400" : ""}>
-                        {getOnlineStatusLabel(isSelfOnline)}
-                      </span>
-                      {currentUser.email ? ` · ${currentUser.email}` : null}
-                    </p>
+                <li className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3">
+                  <div className="flex min-w-0 items-center gap-3 sm:min-w-0 sm:flex-1">
+                    <UserAvatar
+                      displayName={currentUser.displayName}
+                      avatarFileId={currentUser.avatarFileId}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                        <OnlineStatusDot online={isSelfOnline} />
+                        <span className="truncate">{currentUser.displayName}</span>
+                        <span className="text-xs font-normal text-zinc-400">나</span>
+                      </p>
+                      <p className="truncate text-xs text-zinc-500">
+                        <span className={isSelfOnline ? "text-emerald-600 dark:text-emerald-400" : ""}>
+                          {getOnlineStatusLabel(isSelfOnline)}
+                        </span>
+                        {currentUser.email ? (
+                          <span className="hidden sm:inline">{` · ${currentUser.email}`}</span>
+                        ) : null}
+                      </p>
+                    </div>
                   </div>
                   <button
                     type="button"
                     onClick={handleCreateSelfChat}
                     disabled={submitting}
-                    className="shrink-0 rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                    className="shrink-0 self-end rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 sm:self-auto dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
                   >
                     나와의 대화
                   </button>
@@ -350,25 +354,31 @@ export default function FriendList() {
                   const hasCustomNickname = Boolean(friend.nickname?.trim());
 
                   return (
-                    <li key={friend.id} className="flex items-center gap-3 px-4 py-3">
-                      <UserAvatar
-                        displayName={friendName}
-                        avatarFileId={friend.avatarFileId}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="flex items-center gap-2 truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                          <OnlineStatusDot online={isOnline} />
-                          <span className="truncate">{friendName}</span>
-                        </p>
-                        <p className="truncate text-xs text-zinc-500">
-                          <span className={isOnline ? "text-emerald-600 dark:text-emerald-400" : ""}>
-                            {getOnlineStatusLabel(isOnline)}
-                          </span>
-                          {hasCustomNickname ? ` · 원래 이름 ${friend.displayName}` : null}
-                          {friend.email ? ` · ${friend.email}` : null}
-                        </p>
+                    <li key={friend.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3">
+                      <div className="flex min-w-0 items-center gap-3 sm:min-w-0 sm:flex-1">
+                        <UserAvatar
+                          displayName={friendName}
+                          avatarFileId={friend.avatarFileId}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="flex items-center gap-2 truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                            <OnlineStatusDot online={isOnline} />
+                            <span className="truncate">{friendName}</span>
+                          </p>
+                          <p className="truncate text-xs text-zinc-500">
+                            <span className={isOnline ? "text-emerald-600 dark:text-emerald-400" : ""}>
+                              {getOnlineStatusLabel(isOnline)}
+                            </span>
+                            {hasCustomNickname ? (
+                              <span className="hidden sm:inline">{` · 원래 이름 ${friend.displayName}`}</span>
+                            ) : null}
+                            {friend.email ? (
+                              <span className="hidden sm:inline">{` · ${friend.email}`}</span>
+                            ) : null}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex shrink-0 gap-1.5">
+                      <div className="flex shrink-0 justify-end gap-1.5">
                         <button
                           type="button"
                           onClick={() => handleOpenNicknameEditor(friend)}

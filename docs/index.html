@@ -4,47 +4,459 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Echo | 실시간 메신저</title>
-  <meta name="description" content="Echo — 실시간 그룹 채팅과 1:1 DM을 지원하는 메신저" />
+  <meta name="description" content="Echo — 실시간 그룹 채팅과 1:1 DM을 지원하는 메신저. 친구, 채팅방, 읽음 표시, 사진·링크 미리보기를 한곳에서." />
   <meta name="google-site-verification" content="_xs07Nn2btOir1Aw0DjEC4KFZxYXZlyp4qPj_Qtp8Ns" />
   <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --text: #18181b;
+      --muted: #71717a;
+      --border: #e4e4e7;
+      --accent: #1a73e8;
+      --accent-soft: #eff6ff;
+      --shadow: 0 10px 30px rgba(24, 24, 27, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #09090b;
+        --surface: #18181b;
+        --text: #fafafa;
+        --muted: #a1a1aa;
+        --border: #3f3f46;
+        --accent: #60a5fa;
+        --accent-soft: #172554;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #fafafa;
-      color: #18181b;
-      line-height: 1.6;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
     }
-    main {
-      max-width: 40rem;
+
+    a {
+      color: inherit;
+    }
+
+    .page {
+      max-width: 72rem;
       margin: 0 auto;
-      padding: 4rem 1.5rem;
+      padding: 3rem 1.25rem 4rem;
     }
-    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-    .tag { color: #71717a; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.08em; }
-    a { color: #18181b; }
-    .links { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; }
-    .links a {
-      display: inline-block;
-      padding: 0.5rem 1rem;
-      border: 1px solid #d4d4d8;
-      border-radius: 0.5rem;
+
+    .hero {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .hero-mark {
+      width: 4rem;
+      height: 4rem;
+      margin: 0 auto 1rem;
+      border-radius: 1rem;
+      background: #18181b;
+      color: #fafafa;
+      display: grid;
+      place-items: center;
+      font-size: 1.35rem;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .hero-mark {
+        background: #fafafa;
+        color: #18181b;
+      }
+    }
+
+    .tag {
+      color: var(--muted);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 0 0 0.5rem;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 2.75rem);
+      line-height: 1.2;
+      margin: 0 0 0.75rem;
+    }
+
+    .lead {
+      max-width: 36rem;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .hero-links {
+      margin-top: 1.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .hero-links a {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.55rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
       text-decoration: none;
+      font-size: 0.9rem;
+      background: var(--surface);
+    }
+
+    .hero-links a.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .hero-links a.primary {
+        color: #0f172a;
+      }
+    }
+
+    section {
+      margin-bottom: 4rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin: 0 0 0.5rem;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      margin: 0 0 1.75rem;
+    }
+
+    .screen-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+
+    .screen-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .screen-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #111;
+    }
+
+    .screen-card figcaption {
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .screen-card.wide {
+      grid-column: 1 / -1;
+      max-width: 28rem;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+      gap: 1rem;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.25rem;
+    }
+
+    .feature-card h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+    }
+
+    .feature-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 0.75rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .feature-list li {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.85rem;
+      padding: 0.9rem 1rem;
+    }
+
+    .feature-list strong {
+      display: block;
+      margin-bottom: 0.15rem;
+    }
+
+    .feature-list span {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .bullet {
+      flex-shrink: 0;
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: grid;
+      place-items: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      padding-top: 1.5rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-links a {
+      color: var(--muted);
+    }
+
+    @media (max-width: 640px) {
+      .screen-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .screen-card.wide {
+        max-width: none;
+      }
     }
   </style>
 </head>
 <body>
-  <main>
-    <p class="tag">Echo</p>
-    <h1>실시간 메신저</h1>
-    <p>
-      Spring Boot + Next.js 기반 그룹 채팅·DM 메신저입니다.
-      Google OAuth2 로그인과 JWT 인증을 사용합니다.
-    </p>
-    <div class="links">
-      <a href="https://github.com/hyeonklab/Echo">GitHub 저장소</a>
-      <a href="./privacy.html">개인정보처리방침</a>
-      <a href="./terms.html">서비스 이용약관</a>
-    </div>
-  </main>
+  <div class="page">
+    <header class="hero">
+      <div class="hero-mark" aria-hidden="true">E</div>
+      <p class="tag">Echo</p>
+      <h1>실시간으로 메시지가 메아리치다</h1>
+      <p class="lead">
+        그룹 채팅, 1:1 대화, 나와의 메모까지. 친구와 채팅방을 만들고
+        사진·링크를 나누며, 읽음 표시로 대화 흐름을 놓치지 않습니다.
+      </p>
+      <div class="hero-links">
+        <a class="primary" href="https://github.com/hyeonklab/echo">GitHub 저장소</a>
+        <a href="./privacy.html">개인정보처리방침</a>
+        <a href="./terms.html">서비스 이용약관</a>
+      </div>
+    </header>
+
+    <section aria-labelledby="screens-title">
+      <h2 id="screens-title">주요 화면</h2>
+      <p class="section-desc">로그인부터 채팅방까지, Echo의 핵심 화면을 미리 볼 수 있습니다.</p>
+
+      <div class="screen-grid">
+        <figure class="screen-card">
+          <img src="./screenshots/login.png" alt="로그인 화면" loading="lazy" />
+          <figcaption>로그인</figcaption>
+        </figure>
+        <figure class="screen-card">
+          <img src="./screenshots/home.png" alt="홈 화면" loading="lazy" />
+          <figcaption>홈</figcaption>
+        </figure>
+        <figure class="screen-card">
+          <img src="./screenshots/friends.png" alt="친구 목록 화면" loading="lazy" />
+          <figcaption>친구</figcaption>
+        </figure>
+        <figure class="screen-card">
+          <img src="./screenshots/chat-list.png" alt="채팅 목록 화면" loading="lazy" />
+          <figcaption>채팅 목록</figcaption>
+        </figure>
+        <figure class="screen-card">
+          <img src="./screenshots/chat-room-link-preview.png" alt="링크 미리보기가 있는 채팅방" loading="lazy" />
+          <figcaption>링크 미리보기</figcaption>
+        </figure>
+        <figure class="screen-card">
+          <img src="./screenshots/chat-room-image-preview.png" alt="사진이 첨부된 채팅방" loading="lazy" />
+          <figcaption>사진 보내기</figcaption>
+        </figure>
+        <figure class="screen-card">
+          <img src="./screenshots/chat-room-group.png" alt="그룹 채팅방" loading="lazy" />
+          <figcaption>그룹 채팅</figcaption>
+        </figure>
+        <figure class="screen-card">
+          <img src="./screenshots/chat-room-girlfriend.png" alt="1:1 DM 채팅방" loading="lazy" />
+          <figcaption>1:1 대화</figcaption>
+        </figure>
+        <figure class="screen-card">
+          <img src="./screenshots/chat-room-professor.png" alt="교수님과의 DM" loading="lazy" />
+          <figcaption>친구 별칭 표시</figcaption>
+        </figure>
+        <figure class="screen-card">
+          <img src="./screenshots/chat-room-club.png" alt="동아리 그룹 채팅방" loading="lazy" />
+          <figcaption>동아리 단톡</figcaption>
+        </figure>
+        <figure class="screen-card wide">
+          <img src="./screenshots/chat-room-family.png" alt="가족 단톡방" loading="lazy" />
+          <figcaption>가족 단톡</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section aria-labelledby="features-title">
+      <h2 id="features-title">이런 것들을 할 수 있어요</h2>
+      <p class="section-desc">개발 용어 없이, Echo에서 바로 쓸 수 있는 기능만 정리했습니다.</p>
+
+      <ul class="feature-list">
+        <li>
+          <span class="bullet">1</span>
+          <div>
+            <strong>Google·Naver로 간편 로그인</strong>
+            <span>별도 회원가입 없이 소셜 계정으로 바로 시작합니다.</span>
+          </div>
+        </li>
+        <li>
+          <span class="bullet">2</span>
+          <div>
+            <strong>프로필 꾸미기</strong>
+            <span>표시 이름과 프로필 사진을 바꿔 나만의 프로필을 만들 수 있습니다.</span>
+          </div>
+        </li>
+        <li>
+          <span class="bullet">3</span>
+          <div>
+            <strong>친구 추가와 별칭</strong>
+            <span>이름이나 이메일로 친구를 찾고, 원하는 이름으로 저장해 채팅 목록에 표시할 수 있습니다.</span>
+          </div>
+        </li>
+        <li>
+          <span class="bullet">4</span>
+          <div>
+            <strong>온라인 상태 확인</strong>
+            <span>친구가 지금 접속 중인지 한눈에 볼 수 있습니다.</span>
+          </div>
+        </li>
+        <li>
+          <span class="bullet">5</span>
+          <div>
+            <strong>그룹·1:1·나와의 대화</strong>
+            <span>단체 채팅방, 일대일 DM, 혼자 메모하는 나와의 대화방을 만들 수 있습니다.</span>
+          </div>
+        </li>
+        <li>
+          <span class="bullet">6</span>
+          <div>
+            <strong>실시간 메시지</strong>
+            <span>보낸 메시지가 바로 상대 화면에 전달됩니다.</span>
+          </div>
+        </li>
+        <li>
+          <span class="bullet">7</span>
+          <div>
+            <strong>사진 여러 장 보내기</strong>
+            <span>채팅방에 사진을 끌어다 놓거나 선택해 앨범처럼 보낼 수 있습니다.</span>
+          </div>
+        </li>
+        <li>
+          <span class="bullet">8</span>
+          <div>
+            <strong>링크 미리보기</strong>
+            <span>URL을 붙이면 제목·설명이 카드로 보여 대화가 더 읽기 쉽습니다.</span>
+          </div>
+        </li>
+        <li>
+          <span class="bullet">9</span>
+          <div>
+            <strong>읽음 표시와 미읽음 배지</strong>
+            <span>상대가 어디까지 읽었는지 확인하고, 안 읽은 방은 목록에서 바로 찾을 수 있습니다.</span>
+          </div>
+        </li>
+        <li>
+          <span class="bullet">10</span>
+          <div>
+            <strong>메시지·채팅방 정리</strong>
+            <span>메시지를 나만 지우거나 모두에게서 지울 수 있고, 필요 없는 채팅방은 목록에서 정리할 수 있습니다.</span>
+          </div>
+        </li>
+        <li>
+          <span class="bullet">11</span>
+          <div>
+            <strong>브라우저 알림</strong>
+            <span>다른 탭을 보고 있어도 새 메시지를 놓치지 않도록 알림을 받을 수 있습니다.</span>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="theme-title">
+      <h2 id="theme-title">다크 · 라이트 · 시스템 테마</h2>
+      <p class="section-desc">홈·로그인·사이드바에서 테마를 바꿀 수 있습니다. 시스템을 고르면 기기 설정을 따릅니다.</p>
+
+      <div class="screen-grid">
+        <figure class="screen-card">
+          <img src="./screenshots/theme-light.png" alt="라이트 테마 홈 화면" loading="lazy" />
+          <figcaption>라이트</figcaption>
+        </figure>
+        <figure class="screen-card">
+          <img src="./screenshots/theme-dark.png" alt="다크 테마 홈 화면" loading="lazy" />
+          <figcaption>다크</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>© Echo</p>
+      <div class="footer-links">
+        <a href="https://github.com/hyeonklab/echo">GitHub</a>
+        <a href="./privacy.html">개인정보처리방침</a>
+        <a href="./terms.html">서비스 이용약관</a>
+      </div>
+    </footer>
+  </div>
 </body>
 </html>
